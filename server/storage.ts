@@ -18,6 +18,7 @@ export interface IStorage {
   createTopic(topic: InsertTopic): Promise<Topic>;
   getTopic(id: number): Promise<Topic | undefined>;
   getAllTopics(): Promise<Topic[]>;
+  searchTopics(query: string): Promise<Topic[]>;
   
   // Response operations
   createResponse(response: InsertResponse): Promise<Response>;

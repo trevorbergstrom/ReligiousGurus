@@ -1,11 +1,16 @@
-import { InfoIcon, Settings, Github, Globe } from "lucide-react";
+import { InfoIcon, Settings, Github, Globe, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link, useLocation } from "wouter";
 
 export default function Header() {
+  const [location] = useLocation();
+  const isHomePage = location === "/";
+  const isAboutPage = location === "/about";
+  
   return (
     <header className="bg-white shadow-md">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-3" onClick={() => window.location.href = "/"} style={{cursor: "pointer"}}>
           <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center shadow-md">
             <span className="text-white text-xl font-bold">RG</span>
           </div>
@@ -18,29 +23,35 @@ export default function Header() {
         </div>
         
         <div className="flex items-center space-x-2">
-          <Button
-            variant="ghost"
-            className="hidden md:inline-flex items-center space-x-1 text-slate-600 hover:text-primary-600"
-          >
-            <Globe className="h-4 w-4" />
-            <span>Explore</span>
-          </Button>
+          <Link href="/">
+            <Button
+              variant={isHomePage ? "default" : "ghost"}
+              className="hidden md:inline-flex items-center space-x-1 text-slate-600 hover:text-primary-600"
+            >
+              <Home className="h-4 w-4" />
+              <span>Home</span>
+            </Button>
+          </Link>
           
-          <Button
-            variant="ghost"
-            className="hidden md:inline-flex items-center space-x-1 text-slate-600 hover:text-primary-600"
-          >
-            <InfoIcon className="h-4 w-4" />
-            <span>About</span>
-          </Button>
+          <Link href="/about">
+            <Button
+              variant={isAboutPage ? "default" : "ghost"}
+              className="hidden md:inline-flex items-center space-x-1 text-slate-600 hover:text-primary-600"
+            >
+              <InfoIcon className="h-4 w-4" />
+              <span>About</span>
+            </Button>
+          </Link>
           
-          <Button
-            variant="ghost"
-            className="hidden md:inline-flex items-center space-x-1 text-slate-600 hover:text-primary-600"
-          >
-            <Github className="h-4 w-4" />
-            <span>GitHub</span>
-          </Button>
+          <a href="https://github.com/hhanspal/ReligiousGurus" target="_blank" rel="noopener noreferrer">
+            <Button
+              variant="ghost"
+              className="hidden md:inline-flex items-center space-x-1 text-slate-600 hover:text-primary-600"
+            >
+              <Github className="h-4 w-4" />
+              <span>GitHub</span>
+            </Button>
+          </a>
           
           <Button
             variant="outline" 

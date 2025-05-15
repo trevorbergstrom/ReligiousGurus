@@ -40,19 +40,19 @@ export default function Footer() {
             <h3 className="font-bold text-lg mb-5 text-slate-800">Important Links</h3>
             <ul className="space-y-3 text-sm">
               <li>
-                <a href="#" className="text-slate-600 hover:text-primary-600 transition-colors inline-flex items-center">
+                <a href="/about" className="text-slate-600 hover:text-primary-600 transition-colors inline-flex items-center">
                   <span className="mr-2">→</span>
                   About the Project
                 </a>
               </li>
               <li>
-                <a href="#" className="text-slate-600 hover:text-primary-600 transition-colors inline-flex items-center">
+                <a href="https://github.com/hhanspal/ReligiousGurus" target="_blank" rel="noopener noreferrer" className="text-slate-600 hover:text-primary-600 transition-colors inline-flex items-center">
                   <span className="mr-2">→</span>
                   Source Code (GitHub)
                 </a>
               </li>
               <li>
-                <a href="#" className="text-slate-600 hover:text-primary-600 transition-colors inline-flex items-center">
+                <a href="https://github.com/hhanspal/ReligiousGurus/issues" target="_blank" rel="noopener noreferrer" className="text-slate-600 hover:text-primary-600 transition-colors inline-flex items-center">
                   <span className="mr-2">→</span>
                   Report an Issue
                 </a>
