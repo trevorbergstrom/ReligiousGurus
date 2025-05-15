@@ -8,11 +8,28 @@ import { useState } from "react";
 type HistoryPanelProps = {
   topics: TopicData[];
   onSelectTopic: (topicId: number) => void;
+  onSearch?: (query: string) => void;
 };
 
-export default function HistoryPanel({ topics, onSelectTopic }: HistoryPanelProps) {
+export default function HistoryPanel({ topics, onSelectTopic, onSearch }: HistoryPanelProps) {
+  const [searchQuery, setSearchQuery] = useState('');
+  
   // Show at most 5 topics in the history panel
   const recentTopics = topics.slice(0, 5);
+  
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (onSearch) {
+      onSearch(searchQuery);
+    }
+  };
+  
+  const handleClearSearch = () => {
+    setSearchQuery('');
+    if (onSearch) {
+      onSearch('');
+    }
+  };
   
   return (
     <div className="bg-white rounded-xl shadow-md">
@@ -27,6 +44,35 @@ export default function HistoryPanel({ topics, onSelectTopic }: HistoryPanelProp
       </div>
       
       <div className="p-5">
+        <form onSubmit={handleSearch} className="mb-4 flex">
+          <div className="relative flex-grow">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Input
+              type="text"
+              placeholder="Search past topics..."
+              className="pl-9 pr-4 py-2 w-full border border-slate-200 rounded-l-lg focus:ring-primary-500 focus:border-primary-500"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <Button 
+            type="submit" 
+            className="rounded-none"
+          >
+            Search
+          </Button>
+          {searchQuery && (
+            <Button 
+              type="button"
+              variant="outline"
+              className="rounded-l-none border-l-0"
+              onClick={handleClearSearch}
+            >
+              Clear
+            </Button>
+          )}
+        </form>
+        
         {recentTopics.length === 0 ? (
           <div className="text-center py-8 text-slate-500 bg-slate-50 rounded-lg border border-dashed border-slate-200">
             <Clock className="h-10 w-10 text-slate-300 mx-auto mb-3" />

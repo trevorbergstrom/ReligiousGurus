@@ -12,15 +12,16 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function Home() {
   const [currentTopicResponse, setCurrentTopicResponse] = useState<TopicResponsePair | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string | undefined>(undefined);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
   // Fetch topics
-  const { data: topics = [] } = useQuery({
-    queryKey: ["/api/topics"],
+  const { data: topics = [], refetch } = useQuery({
+    queryKey: ["/api/topics", searchQuery],
     queryFn: async () => {
       try {
-        return await fetchTopics();
+        return await fetchTopics(searchQuery);
       } catch (error) {
         toast({
           title: "Error",
@@ -37,6 +38,8 @@ export default function Home() {
     mutationFn: submitTopic,
     onSuccess: (data) => {
       setCurrentTopicResponse(data);
+      // Clear search query and invalidate queries
+      setSearchQuery(undefined);
       queryClient.invalidateQueries({ queryKey: ["/api/topics"] });
       toast({
         title: "Success",
@@ -68,11 +71,17 @@ export default function Home() {
   });
   
   const handleTopicSubmit = (content: string) => {
+    // Clear any search when submitting a new topic
+    setSearchQuery(undefined);
     submitNewTopic(content);
   };
   
   const handleSelectTopic = (topicId: number) => {
     fetchSpecificResponse(topicId);
+  };
+  
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
   };
   
   const isLoading = isSubmitting || isFetching;
@@ -97,6 +106,7 @@ export default function Home() {
                 <HistoryPanel
                   topics={topics}
                   onSelectTopic={handleSelectTopic}
+                  onSearch={handleSearch}
                 />
               </div>
             </div>
@@ -113,6 +123,7 @@ export default function Home() {
               <HistoryPanel
                 topics={topics}
                 onSelectTopic={handleSelectTopic}
+                onSearch={handleSearch}
               />
             </div>
             
