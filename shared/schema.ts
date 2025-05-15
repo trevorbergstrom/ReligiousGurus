@@ -1,6 +1,7 @@
-import { pgTable, text, serial, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, jsonb, uuid } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { randomUUID } from "crypto";
 
 // Topic schema
 export const topics = pgTable("topics", {
@@ -67,3 +68,38 @@ export type WorldViewComparison = {
   keyConcepts: string[];
   afterlifeType: string;
 };
+
+// Chat conversations
+export const chatSessions = pgTable("chat_sessions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  worldview: text("worldview").notNull(),
+  title: text("title").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertChatSessionSchema = createInsertSchema(chatSessions).pick({
+  worldview: true,
+  title: true,
+});
+
+// Chat messages
+export const chatMessages = pgTable("chat_messages", {
+  id: serial("id").primaryKey(),
+  sessionId: uuid("session_id").notNull().references(() => chatSessions.id),
+  content: text("content").notNull(),
+  isUser: boolean("is_user").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertChatMessageSchema = createInsertSchema(chatMessages).pick({
+  sessionId: true,
+  content: true,
+  isUser: true,
+});
+
+// Define types for chat
+export type InsertChatSession = z.infer<typeof insertChatSessionSchema>;
+export type ChatSession = typeof chatSessions.$inferSelect;
+
+export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;
+export type ChatMessage = typeof chatMessages.$inferSelect;

@@ -1,10 +1,16 @@
 import { 
   topics, 
   responses, 
+  chatSessions,
+  chatMessages,
   type Topic, 
   type InsertTopic, 
   type Response, 
   type InsertResponse,
+  type ChatSession,
+  type InsertChatSession,
+  type ChatMessage,
+  type InsertChatMessage,
   WorldView,
   ChartData,
   WorldViewComparison
@@ -23,6 +29,16 @@ export interface IStorage {
   // Response operations
   createResponse(response: InsertResponse): Promise<Response>;
   getResponseByTopicId(topicId: number): Promise<Response | undefined>;
+  
+  // Chat operations
+  createChatSession(session: InsertChatSession): Promise<ChatSession>;
+  getChatSession(id: string): Promise<ChatSession | undefined>;
+  getChatSessionsByWorldview(worldview: string): Promise<ChatSession[]>;
+  getAllChatSessions(): Promise<ChatSession[]>;
+  
+  // Chat messages
+  createChatMessage(message: InsertChatMessage): Promise<ChatMessage>;
+  getChatMessagesBySessionId(sessionId: string): Promise<ChatMessage[]>;
 }
 
 // Database implementation of the storage interface
