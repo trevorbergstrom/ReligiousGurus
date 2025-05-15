@@ -13,9 +13,10 @@ type HistoryPanelProps = {
 
 export default function HistoryPanel({ topics, onSelectTopic, onSearch }: HistoryPanelProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [showAllTopics, setShowAllTopics] = useState(false);
   
-  // Show at most 5 topics in the history panel
-  const recentTopics = topics.slice(0, 5);
+  // Show either 5 topics or all topics based on user preference
+  const displayTopics = showAllTopics ? topics : topics.slice(0, 5);
   
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,16 +74,22 @@ export default function HistoryPanel({ topics, onSelectTopic, onSearch }: Histor
           )}
         </form>
         
-        {recentTopics.length === 0 ? (
+        {topics.length === 0 ? (
           <div className="text-center py-8 text-slate-500 bg-slate-50 rounded-lg border border-dashed border-slate-200">
             <Clock className="h-10 w-10 text-slate-300 mx-auto mb-3" />
             <p className="font-medium">No topics explored yet</p>
             <p className="text-sm mt-2 text-slate-400">Enter a topic above to get started</p>
           </div>
+        ) : displayTopics.length === 0 ? (
+          <div className="text-center py-8 text-slate-500 bg-slate-50 rounded-lg border border-dashed border-slate-200">
+            <Search className="h-10 w-10 text-slate-300 mx-auto mb-3" />
+            <p className="font-medium">No matching topics found</p>
+            <p className="text-sm mt-2 text-slate-400">Try a different search term</p>
+          </div>
         ) : (
           <>
             <div className="space-y-3">
-              {recentTopics.map((topic) => (
+              {displayTopics.map((topic) => (
                 <div 
                   key={topic.id} 
                   className="border border-slate-200 rounded-lg hover:border-primary-200 hover:bg-slate-50 transition-all shadow-sm hover:shadow"
@@ -104,13 +111,26 @@ export default function HistoryPanel({ topics, onSelectTopic, onSearch }: Histor
               ))}
             </div>
             
-            {topics.length > 5 && (
+            {!showAllTopics && topics.length > 5 && !searchQuery && (
               <div className="text-center mt-5">
                 <Button 
                   variant="outline"
                   className="text-primary-600 hover:text-primary-700 border-primary-200 hover:bg-primary-50"
+                  onClick={() => setShowAllTopics(true)}
                 >
                   View all topics
+                </Button>
+              </div>
+            )}
+            
+            {showAllTopics && !searchQuery && (
+              <div className="text-center mt-5">
+                <Button 
+                  variant="outline"
+                  className="text-primary-600 hover:text-primary-700 border-primary-200 hover:bg-primary-50"
+                  onClick={() => setShowAllTopics(false)}
+                >
+                  Show less
                 </Button>
               </div>
             )}
