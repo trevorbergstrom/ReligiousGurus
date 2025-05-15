@@ -8,26 +8,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { WorldView } from '@shared/schema';
+import { WorldView, ChatMessage, ChatSession } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
-
-// Message type definitions
-interface ChatMessage {
-  id: number;
-  sessionId: string;
-  content: string;
-  isUser: boolean;
-  createdAt: string;
-}
-
-interface ChatSession {
-  id: string;
-  worldview: string;
-  title: string;
-  createdAt: string;
-}
+import { 
+  fetchChatSessions,
+  fetchChatSession,
+  fetchChatMessages,
+  createChatSession,
+  sendChatMessage
+} from '@/lib/api';
 
 // Get worldview colors for styling
 const getWorldViewColor = (worldview: string): string => {

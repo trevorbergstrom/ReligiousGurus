@@ -1,4 +1,4 @@
-import { InfoIcon, Settings, Github, Globe, Home } from "lucide-react";
+import { InfoIcon, Settings, Github, MessageCircle, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
 
@@ -6,6 +6,7 @@ export default function Header() {
   const [location] = useLocation();
   const isHomePage = location === "/";
   const isAboutPage = location === "/about";
+  const isChatPage = location === "/chat";
   
   return (
     <header className="bg-white shadow-md">
@@ -40,6 +41,16 @@ export default function Header() {
             >
               <InfoIcon className="h-4 w-4" />
               <span>About</span>
+            </Button>
+          </Link>
+          
+          <Link href="/chat">
+            <Button
+              variant={isChatPage ? "default" : "ghost"}
+              className="hidden md:inline-flex items-center space-x-1 text-slate-600 hover:text-primary-600"
+            >
+              <MessageCircle className="h-4 w-4" />
+              <span>Chat</span>
             </Button>
           </Link>
           
