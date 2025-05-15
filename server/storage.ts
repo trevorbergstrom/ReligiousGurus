@@ -9,6 +9,8 @@ import {
   ChartData,
   WorldViewComparison
 } from "@shared/schema";
+import { db } from "./db";
+import { eq, desc } from "drizzle-orm";
 
 // Interface for storage operations
 export interface IStorage {
@@ -22,60 +24,49 @@ export interface IStorage {
   getResponseByTopicId(topicId: number): Promise<Response | undefined>;
 }
 
-// In-memory implementation of the storage interface
-export class MemStorage implements IStorage {
-  private topics: Map<number, Topic>;
-  private responses: Map<number, Response>;
-  private topicIdCounter: number;
-  private responseIdCounter: number;
-
-  constructor() {
-    this.topics = new Map();
-    this.responses = new Map();
-    this.topicIdCounter = 1;
-    this.responseIdCounter = 1;
-  }
-
+// Database implementation of the storage interface
+export class DatabaseStorage implements IStorage {
   // Topic operations
   async createTopic(insertTopic: InsertTopic): Promise<Topic> {
-    const id = this.topicIdCounter++;
-    const now = new Date();
-    const topic: Topic = { 
-      id, 
-      ...insertTopic, 
-      createdAt: now 
-    };
-    this.topics.set(id, topic);
+    const [topic] = await db
+      .insert(topics)
+      .values(insertTopic)
+      .returning();
     return topic;
   }
 
   async getTopic(id: number): Promise<Topic | undefined> {
-    return this.topics.get(id);
+    const [topic] = await db
+      .select()
+      .from(topics)
+      .where(eq(topics.id, id));
+    return topic;
   }
 
   async getAllTopics(): Promise<Topic[]> {
-    return Array.from(this.topics.values())
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    return await db
+      .select()
+      .from(topics)
+      .orderBy(desc(topics.createdAt));
   }
 
   // Response operations
   async createResponse(insertResponse: InsertResponse): Promise<Response> {
-    const id = this.responseIdCounter++;
-    const now = new Date();
-    const response: Response = {
-      id,
-      ...insertResponse,
-      createdAt: now
-    };
-    this.responses.set(id, response);
+    const [response] = await db
+      .insert(responses)
+      .values(insertResponse)
+      .returning();
     return response;
   }
 
   async getResponseByTopicId(topicId: number): Promise<Response | undefined> {
-    const responses = Array.from(this.responses.values());
-    return responses.find(response => response.topicId === topicId);
+    const [response] = await db
+      .select()
+      .from(responses)
+      .where(eq(responses.topicId, topicId));
+    return response;
   }
 }
 
-// Export memory storage instance
-export const storage = new MemStorage();
+// Export database storage instance
+export const storage = new DatabaseStorage();
