@@ -1,0 +1,119 @@
+ Replit Agent Prompt: Build the “Religious Gurus” Agentic AI App
+Build a full-stack agentic AI web application called Religious Gurus. The app helps users explore how major worldviews interpret any topic they submit — such as "What happens after death?" — by querying 7 AI agents representing different religious and non-religious belief systems.
+
+🎯 App Purpose
+The application allows users to:
+
+Input a topic of interest.
+
+Receive a neutral summary comparing 7 belief systems:
+
+Atheism
+
+Agnosticism
+
+Christianity
+
+Islam
+
+Hinduism
+
+Buddhism
+
+Judaism
+
+View a chart or table comparing how each belief system interprets the topic.
+
+🏗️ Requirements
+🔹 Frontend (Web App)
+Framework: React + Tailwind CSS
+
+Main UI components:
+
+Text input for new topic
+
+Dropdown of previously explored topics
+
+Button to submit topic
+
+Scrollable summary card with AI-generated paragraph
+
+Visual chart or table showing key differences
+
+History panel for reviewed topics
+
+Footer disclaimer noting AI-generated content for educational purposes
+
+🔹 Backend (API + Agent Framework)
+Framework: FastAPI or similar Python web backend
+
+Agent orchestration via LangGraph
+
+Coordinator Agent:
+
+Accepts topic input from frontend
+
+Queries 7 Expert Agents (one per belief system)
+
+Aggregates responses into a summary + visualizable data
+
+Expert Agents:
+
+Use GPT-4 or any open-source LLM
+
+Return short (1–2 sentence) worldview-specific answers
+
+🔹 Data Handling
+Storage method is up to you: choose a lightweight, developer-friendly option
+
+In-memory, local file, or simple key-value store
+
+Should support saving past topics and their responses
+
+🧾 Response Format
+The response from the backend should be JSON structured as follows:
+
+summary: A paragraph highlighting differences and similarities
+
+chart: An object containing:
+
+labels: List of worldviews
+
+columns: Key concepts (e.g. Afterlife, Reincarnation, Judgment, etc.)
+
+data: Matrix representing belief alignment per worldview
+
+💡 AI Agent Behavior
+Each expert agent is prompted to respond neutrally, without judgment, and in a concise, educational style.
+
+The coordinator agent synthesizes the 7 worldview responses and creates the summary and chart data.
+
+🧠 Example Prompt for Expert Agents
+“You are an expert in [Belief System]. Given the topic '[user_input]', describe your worldview’s stance in 1–2 sentences, using neutral and educational language. Avoid bias or judgment.”
+
+📈 Example Topics
+What happens after death?
+
+What is the purpose of life?
+
+How should humans treat animals?
+
+Is suffering meaningful?
+
+✅ Optional Features (Stretch Goals)
+Toggle between GPT-4 and local LLMs
+
+Save and share comparisons
+
+Add ratings or feedback on clarity of responses
+
+Build this as a modular, scalable, API-first application. Make architectural choices (e.g., storage, LLMs) that balance simplicity with extensibility. Focus on clarity, respectfulness, and user-friendly visual representation of belief diversity.
+
+Let me know if you’d like a tailored variant of this for mobile, multilingual use, or educator-specific deployments.
+
+
+
+
+
+
+
