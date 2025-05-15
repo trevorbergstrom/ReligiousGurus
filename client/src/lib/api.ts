@@ -28,26 +28,26 @@ export const fetchResponse = async (topicId: number): Promise<TopicResponsePair>
 // Fetch all chat sessions
 export const fetchChatSessions = async (worldview?: string): Promise<ChatSession[]> => {
   const url = worldview ? `/api/chat/sessions?worldview=${encodeURIComponent(worldview)}` : "/api/chat/sessions";
-  const response = await apiRequest<ChatSession[]>("GET", url);
-  return response;
+  const response = await apiRequest("GET", url);
+  return await response.json();
 };
 
 // Fetch a specific chat session
 export const fetchChatSession = async (sessionId: string): Promise<ChatSession> => {
-  const response = await apiRequest<ChatSession>("GET", `/api/chat/sessions/${sessionId}`);
-  return response;
+  const response = await apiRequest("GET", `/api/chat/sessions/${sessionId}`);
+  return await response.json();
 };
 
 // Create a new chat session
 export const createChatSession = async (data: { worldview: string; title: string }): Promise<ChatSession> => {
-  const response = await apiRequest<ChatSession>("POST", `/api/chat/sessions`, data);
-  return response;
+  const response = await apiRequest("POST", `/api/chat/sessions`, data);
+  return await response.json();
 };
 
 // Fetch messages for a chat session
 export const fetchChatMessages = async (sessionId: string): Promise<ChatMessage[]> => {
-  const response = await apiRequest<ChatMessage[]>("GET", `/api/chat/sessions/${sessionId}/messages`);
-  return response;
+  const response = await apiRequest("GET", `/api/chat/sessions/${sessionId}/messages`);
+  return await response.json();
 };
 
 // Send a message in a chat session
@@ -55,10 +55,10 @@ export const sendChatMessage = async (sessionId: string, content: string): Promi
   userMessage: ChatMessage;
   aiMessage: ChatMessage;
 }> => {
-  const response = await apiRequest<{userMessage: ChatMessage; aiMessage: ChatMessage}>(
+  const response = await apiRequest(
     "POST", 
     `/api/chat/sessions/${sessionId}/messages`, 
     { content }
   );
-  return response;
+  return await response.json();
 };
