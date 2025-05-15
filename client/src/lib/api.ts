@@ -28,31 +28,25 @@ export const fetchResponse = async (topicId: number): Promise<TopicResponsePair>
 // Fetch all chat sessions
 export const fetchChatSessions = async (worldview?: string): Promise<ChatSession[]> => {
   const url = worldview ? `/api/chat/sessions?worldview=${encodeURIComponent(worldview)}` : "/api/chat/sessions";
-  const response = await apiRequest(url);
+  const response = await apiRequest<ChatSession[]>("GET", url);
   return response;
 };
 
 // Fetch a specific chat session
 export const fetchChatSession = async (sessionId: string): Promise<ChatSession> => {
-  const response = await apiRequest(`/api/chat/sessions/${sessionId}`);
+  const response = await apiRequest<ChatSession>("GET", `/api/chat/sessions/${sessionId}`);
   return response;
 };
 
 // Create a new chat session
 export const createChatSession = async (data: { worldview: string; title: string }): Promise<ChatSession> => {
-  const response = await apiRequest(`/api/chat/sessions`, {
-    method: 'POST',
-    body: JSON.stringify(data),
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
+  const response = await apiRequest<ChatSession>("POST", `/api/chat/sessions`, data);
   return response;
 };
 
 // Fetch messages for a chat session
 export const fetchChatMessages = async (sessionId: string): Promise<ChatMessage[]> => {
-  const response = await apiRequest(`/api/chat/sessions/${sessionId}/messages`);
+  const response = await apiRequest<ChatMessage[]>("GET", `/api/chat/sessions/${sessionId}/messages`);
   return response;
 };
 
@@ -61,12 +55,10 @@ export const sendChatMessage = async (sessionId: string, content: string): Promi
   userMessage: ChatMessage;
   aiMessage: ChatMessage;
 }> => {
-  const response = await apiRequest(`/api/chat/sessions/${sessionId}/messages`, {
-    method: 'POST',
-    body: JSON.stringify({ content }),
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
+  const response = await apiRequest<{userMessage: ChatMessage; aiMessage: ChatMessage}>(
+    "POST", 
+    `/api/chat/sessions/${sessionId}/messages`, 
+    { content }
+  );
   return response;
 };

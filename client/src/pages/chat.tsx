@@ -47,14 +47,14 @@ export default function Chat() {
   // Query to fetch all sessions
   const { data: sessions = [], isLoading: isLoadingSessions } = useQuery({
     queryKey: ['/api/chat/sessions'],
-    queryFn: () => apiRequest<ChatSession[]>('/api/chat/sessions'),
+    queryFn: () => fetchChatSessions(),
   });
 
   // Query to fetch messages for the current session
   const { data: messages = [], isLoading: isLoadingMessages } = useQuery({
     queryKey: ['/api/chat/sessions', sessionId, 'messages'],
     queryFn: () => sessionId 
-      ? apiRequest<ChatMessage[]>(`/api/chat/sessions/${sessionId}/messages`) 
+      ? fetchChatMessages(sessionId) 
       : Promise.resolve([]),
     enabled: !!sessionId,
   });
@@ -63,22 +63,16 @@ export default function Chat() {
   const { data: currentSession } = useQuery({
     queryKey: ['/api/chat/sessions', sessionId],
     queryFn: () => sessionId 
-      ? apiRequest<ChatSession>(`/api/chat/sessions/${sessionId}`) 
-      : Promise.resolve(null),
+      ? fetchChatSession(sessionId) 
+      : Promise.resolve(null as unknown as ChatSession),
     enabled: !!sessionId,
   });
 
   // Create a new session mutation
   const createSessionMutation = useMutation({
     mutationFn: (newSession: { worldview: string; title: string }) => 
-      apiRequest('/api/chat/sessions', {
-        method: 'POST',
-        body: JSON.stringify(newSession),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }),
-    onSuccess: (data: ChatSession) => {
+      createChatSession(newSession),
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/chat/sessions'] });
       setSessionId(data.id);
       setIsCreatingSession(false);
@@ -99,13 +93,7 @@ export default function Chat() {
   // Send message mutation
   const sendMessageMutation = useMutation({
     mutationFn: (content: string) => 
-      apiRequest(`/api/chat/sessions/${sessionId}/messages`, {
-        method: 'POST',
-        body: JSON.stringify({ content }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }),
+      sendChatMessage(sessionId as string, content),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/chat/sessions', sessionId, 'messages'] });
       setMessage('');
@@ -178,7 +166,7 @@ export default function Chat() {
 
     return (
       <div className="space-y-4">
-        {messages.map((msg) => (
+        {messages.map((msg: ChatMessage) => (
           <div
             key={msg.id}
             className={`flex ${msg.isUser ? 'justify-end' : 'justify-start'}`}
@@ -241,7 +229,7 @@ export default function Chat() {
                 <p className="text-center py-4 text-gray-500">No sessions yet</p>
               ) : (
                 <div className="space-y-2">
-                  {sessions.map((session) => (
+                  {sessions.map((session: ChatSession) => (
                     <Button
                       key={session.id}
                       variant={sessionId === session.id ? "default" : "outline"}
