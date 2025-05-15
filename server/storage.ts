@@ -96,6 +96,55 @@ export class DatabaseStorage implements IStorage {
       .where(eq(responses.topicId, topicId));
     return response;
   }
+  
+  // Chat operations
+  async createChatSession(insertSession: InsertChatSession): Promise<ChatSession> {
+    const [session] = await db
+      .insert(chatSessions)
+      .values(insertSession)
+      .returning();
+    return session;
+  }
+  
+  async getChatSession(id: string): Promise<ChatSession | undefined> {
+    const [session] = await db
+      .select()
+      .from(chatSessions)
+      .where(eq(chatSessions.id, id));
+    return session;
+  }
+  
+  async getChatSessionsByWorldview(worldview: string): Promise<ChatSession[]> {
+    return await db
+      .select()
+      .from(chatSessions)
+      .where(eq(chatSessions.worldview, worldview))
+      .orderBy(desc(chatSessions.createdAt));
+  }
+  
+  async getAllChatSessions(): Promise<ChatSession[]> {
+    return await db
+      .select()
+      .from(chatSessions)
+      .orderBy(desc(chatSessions.createdAt));
+  }
+  
+  // Chat messages
+  async createChatMessage(insertMessage: InsertChatMessage): Promise<ChatMessage> {
+    const [message] = await db
+      .insert(chatMessages)
+      .values(insertMessage)
+      .returning();
+    return message;
+  }
+  
+  async getChatMessagesBySessionId(sessionId: string): Promise<ChatMessage[]> {
+    return await db
+      .select()
+      .from(chatMessages)
+      .where(eq(chatMessages.sessionId, sessionId))
+      .orderBy(chatMessages.createdAt);
+  }
 }
 
 // Export database storage instance
