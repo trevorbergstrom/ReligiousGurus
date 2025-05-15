@@ -1,7 +1,8 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { coordinatorAgent } from "./agents";
+// Use the new LangGraph coordinator instead of the old one
+import { langGraphCoordinator } from "./langGraphAgents";
 import { insertTopicSchema } from "@shared/schema";
 import { z } from "zod";
 
@@ -45,8 +46,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create the topic
       const topic = await storage.createTopic(validatedData);
       
-      // Process the topic with the coordinator agent
-      const processedResponse = await coordinatorAgent.processTopic(topic.content);
+      // Process the topic with the LangGraph coordinator agent
+      const processedResponse = await langGraphCoordinator.processTopic(topic.content);
       
       // Store the response
       const response = await storage.createResponse({
