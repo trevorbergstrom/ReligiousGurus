@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-// Use the new LangGraph coordinator instead of the old one
+// Use the LangGraph coordinator
 import { langGraphCoordinator } from "./langGraphAgents";
 import { insertTopicSchema } from "@shared/schema";
 import { z } from "zod";
