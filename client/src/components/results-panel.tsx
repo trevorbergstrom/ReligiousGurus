@@ -126,8 +126,10 @@ export default function ResultsPanel({ data, isLoading }: ResultsPanelProps) {
       {/* Summary Section */}
       <div className="mb-8">
         <h3 className="font-semibold text-lg mb-3">Summary</h3>
-        <div className="bg-slate-50 p-4 rounded-lg font-serif leading-relaxed">
-          <p>{response.summary}</p>
+        <div className="bg-gradient-to-r from-slate-50 to-slate-100 p-6 rounded-lg border border-slate-200 shadow-inner">
+          <p className="font-serif text-lg leading-relaxed text-slate-800 first-letter:text-3xl first-letter:font-bold first-letter:mr-1 first-letter:float-left first-letter:text-primary-600">
+            {response.summary}
+          </p>
         </div>
       </div>
 
@@ -135,59 +137,123 @@ export default function ResultsPanel({ data, isLoading }: ResultsPanelProps) {
       <div className="mb-8">
         <h3 className="font-semibold text-lg mb-3">Worldviews Compared</h3>
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-4 mb-4">
-          {Object.values(WorldView).map((worldview) => (
-            <div key={worldview} className="flex flex-col items-center">
-              <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-2">
-                <WorldViewIcon worldview={worldview} className="text-slate-700" />
+          {Object.values(WorldView).map((worldview) => {
+            // Use the icon color specific to each worldview
+            const bgColorClass = (() => {
+              switch(worldview) {
+                case WorldView.ATHEISM: return "bg-slate-600";
+                case WorldView.AGNOSTICISM: return "bg-slate-500";
+                case WorldView.CHRISTIANITY: return "bg-blue-600";
+                case WorldView.ISLAM: return "bg-emerald-600";
+                case WorldView.HINDUISM: return "bg-fuchsia-500";
+                case WorldView.BUDDHISM: return "bg-amber-500";
+                case WorldView.JUDAISM: return "bg-indigo-600";
+                default: return "bg-slate-600";
+              }
+            })();
+            
+            return (
+              <div key={worldview} className="flex flex-col items-center transform transition-transform hover:scale-110">
+                <div className={`w-16 h-16 rounded-full ${bgColorClass} flex items-center justify-center mb-2 shadow-md`}>
+                  <WorldViewIcon worldview={worldview} size={28} className="text-white" />
+                </div>
+                <span className="text-sm font-medium text-center">
+                  {getWorldViewName(worldview)}
+                </span>
               </div>
-              <span className="text-sm text-center">
-                {getWorldViewName(worldview)}
-              </span>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
       {/* Chart Section */}
       <div className="mb-8">
         <h3 className="font-semibold text-lg mb-3">Comparative Visualization</h3>
-        <div className="bg-white border border-slate-100 rounded-lg p-4 overflow-hidden">
-          <canvas ref={chartRef} height={300}></canvas>
+        <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-md overflow-hidden">
+          <div className="h-[400px] max-w-3xl mx-auto">
+            <canvas ref={chartRef} height={400}></canvas>
+          </div>
+          <p className="text-slate-500 text-sm mt-4 text-center italic">
+            This chart visualizes key metrics across different worldviews on this topic
+          </p>
         </div>
       </div>
 
       {/* Detailed Comparison Table */}
       <div>
         <h3 className="font-semibold text-lg mb-3">Detailed Comparison</h3>
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto bg-white border border-slate-200 rounded-lg shadow-md">
           <table className="min-w-full border-collapse">
             <thead>
-              <tr className="bg-slate-50">
-                <th className="py-3 px-4 text-left font-semibold text-sm text-slate-700 border-b border-slate-200">Worldview</th>
-                <th className="py-3 px-4 text-left font-semibold text-sm text-slate-700 border-b border-slate-200">Summary</th>
-                <th className="py-3 px-4 text-left font-semibold text-sm text-slate-700 border-b border-slate-200">Key Concepts</th>
-                <th className="py-3 px-4 text-left font-semibold text-sm text-slate-700 border-b border-slate-200">Afterlife Type</th>
+              <tr className="bg-gradient-to-r from-slate-100 to-slate-50">
+                <th className="py-4 px-5 text-left font-semibold text-slate-700 border-b border-slate-200">
+                  Worldview
+                </th>
+                <th className="py-4 px-5 text-left font-semibold text-slate-700 border-b border-slate-200">
+                  Summary
+                </th>
+                <th className="py-4 px-5 text-left font-semibold text-slate-700 border-b border-slate-200">
+                  Key Concepts
+                </th>
+                <th className="py-4 px-5 text-left font-semibold text-slate-700 border-b border-slate-200">
+                  Afterlife Type
+                </th>
               </tr>
             </thead>
             <tbody>
-              {response.comparisons.map((comparison) => (
-                <tr key={comparison.worldview} className="hover:bg-slate-50">
-                  <td className="py-3 px-4 border-b border-slate-100 font-medium">
-                    {getWorldViewName(comparison.worldview)}
-                  </td>
-                  <td className="py-3 px-4 border-b border-slate-100">
-                    {comparison.summary}
-                  </td>
-                  <td className="py-3 px-4 border-b border-slate-100">
-                    {comparison.keyConcepts.join(", ")}
-                  </td>
-                  <td className="py-3 px-4 border-b border-slate-100">
-                    {comparison.afterlifeType}
-                  </td>
-                </tr>
-              ))}
+              {response.comparisons.map((comparison) => {
+                // Get the appropriate color for the worldview
+                const worldviewColor = (() => {
+                  switch(comparison.worldview) {
+                    case WorldView.ATHEISM: return "text-slate-600";
+                    case WorldView.AGNOSTICISM: return "text-slate-500";
+                    case WorldView.CHRISTIANITY: return "text-blue-600";
+                    case WorldView.ISLAM: return "text-emerald-600";
+                    case WorldView.HINDUISM: return "text-fuchsia-500";
+                    case WorldView.BUDDHISM: return "text-amber-500";
+                    case WorldView.JUDAISM: return "text-indigo-600";
+                    default: return "text-slate-600";
+                  }
+                })();
+                
+                return (
+                  <tr key={comparison.worldview} className="hover:bg-slate-50 transition-colors">
+                    <td className="py-4 px-5 border-b border-slate-100">
+                      <div className="flex items-center">
+                        <div className="mr-3">
+                          <WorldViewIcon worldview={comparison.worldview} className={worldviewColor} size={20} />
+                        </div>
+                        <span className={`font-medium ${worldviewColor}`}>
+                          {getWorldViewName(comparison.worldview)}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="py-4 px-5 border-b border-slate-100 font-serif">
+                      {comparison.summary}
+                    </td>
+                    <td className="py-4 px-5 border-b border-slate-100">
+                      <div className="flex flex-wrap gap-2">
+                        {comparison.keyConcepts.map((concept, idx) => (
+                          <span 
+                            key={idx} 
+                            className="inline-block bg-slate-100 text-slate-700 px-2 py-1 rounded-full text-xs font-medium"
+                          >
+                            {concept}
+                          </span>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="py-4 px-5 border-b border-slate-100 font-medium">
+                      {comparison.afterlifeType}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
+        </div>
+        <div className="text-center mt-6 text-sm text-slate-500">
+          <p>Information is AI-generated and intended for educational use only. Always consult authoritative sources for theological guidance.</p>
         </div>
       </div>
     </div>

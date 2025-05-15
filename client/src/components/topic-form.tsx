@@ -58,55 +58,82 @@ export default function TopicForm({ topics, onSubmit, onSelectTopic, isLoading }
   };
   
   return (
-    <div className="bg-white rounded-xl shadow-sm mb-6 p-5">
-      <h2 className="text-lg font-semibold mb-4">Ask the Gurus</h2>
+    <div className="bg-white rounded-xl shadow-md mb-6">
+      <div className="bg-gradient-to-r from-primary-600 to-primary-700 p-5 rounded-t-xl">
+        <h2 className="text-xl font-bold text-white flex items-center">
+          <Search className="mr-2 h-5 w-5" />
+          Ask the Gurus
+        </h2>
+        <p className="text-primary-100 text-sm mt-1">
+          Enter a topic to explore interpretations across 7 worldviews
+        </p>
+      </div>
       
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-          <FormField
-            control={form.control}
-            name="content"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-sm font-medium text-slate-700">Enter a topic or question</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="e.g., What happens after death?"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-500"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <div className="mb-1">
-            <FormLabel className="text-sm font-medium text-slate-700">Or select a previous topic</FormLabel>
-            <Select value={selectedPreviousTopic} onValueChange={handlePreviousTopicSelect}>
-              <SelectTrigger className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg">
-                <SelectValue placeholder="-- Select Previous Topic --" />
-              </SelectTrigger>
-              <SelectContent>
-                {topics.map((topic) => (
-                  <SelectItem key={topic.id} value={topic.id.toString()}>
-                    {topic.content}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <Button
-            type="submit"
-            className="w-full bg-primary-600 hover:bg-primary-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors"
-            disabled={isLoading}
-          >
-            <Search className="mr-2 h-4 w-4" />
-            {isLoading ? "Processing..." : "Get Comparative Insights"}
-          </Button>
-        </form>
-      </Form>
+      <div className="p-5">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-5">
+            <FormField
+              control={form.control}
+              name="content"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-medium text-slate-700">Enter a topic or question</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="e.g., What happens after death?"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-500 text-lg"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <div className="mb-1">
+              <FormLabel className="text-sm font-medium text-slate-700">Or select a previous topic</FormLabel>
+              <Select value={selectedPreviousTopic} onValueChange={handlePreviousTopicSelect}>
+                <SelectTrigger className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg">
+                  <SelectValue placeholder="-- Select Previous Topic --" />
+                </SelectTrigger>
+                <SelectContent>
+                  {topics.length === 0 ? (
+                    <SelectItem value="no-topics" disabled>No previous topics yet</SelectItem>
+                  ) : (
+                    topics.map((topic) => (
+                      <SelectItem key={topic.id} value={topic.id.toString()}>
+                        {topic.content}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <Button
+              type="submit"
+              className="w-full bg-primary-600 hover:bg-primary-700 text-white font-medium py-3 px-4 rounded-lg transition-colors text-lg shadow-md"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <Search className="mr-2 h-5 w-5" />
+                  Get Comparative Insights
+                </>
+              )}
+            </Button>
+            
+            <div className="text-center text-xs text-slate-500 pt-2">
+              Try topics like "The meaning of suffering" or "Free will vs. destiny"
+            </div>
+          </form>
+        </Form>
+      </div>
     </div>
   );
 }

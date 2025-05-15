@@ -84,26 +84,37 @@ export default function Home() {
       <main className="container mx-auto px-4 py-6 flex-grow">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column (Input and History) */}
-          <div className="lg:col-span-1">
-            <TopicForm
-              topics={topics}
-              onSubmit={handleTopicSubmit}
-              onSelectTopic={handleSelectTopic}
-              isLoading={isLoading}
-            />
-            
-            <HistoryPanel
-              topics={topics}
-              onSelectTopic={handleSelectTopic}
-            />
+          <div className="lg:col-span-1 order-2 lg:order-1">
+            <div className="sticky top-4"> {/* Make the left sidebar sticky on desktop */}
+              <TopicForm
+                topics={topics}
+                onSubmit={handleTopicSubmit}
+                onSelectTopic={handleSelectTopic}
+                isLoading={isLoading}
+              />
+              
+              <div className="hidden lg:block"> {/* Only show on desktop in sidebar */}
+                <HistoryPanel
+                  topics={topics}
+                  onSelectTopic={handleSelectTopic}
+                />
+              </div>
+            </div>
           </div>
           
           {/* Right Column (Results) */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 order-1 lg:order-2">
             <ResultsPanel
               data={currentTopicResponse}
               isLoading={isLoading}
             />
+            
+            <div className="block lg:hidden mb-6"> {/* Show on mobile below results */}
+              <HistoryPanel
+                topics={topics}
+                onSelectTopic={handleSelectTopic}
+              />
+            </div>
             
             <MediaGallery />
           </div>
