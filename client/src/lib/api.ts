@@ -3,9 +3,10 @@ import { TopicData, ResponseData, TopicResponsePair } from "@/types";
 
 // API functions for interacting with the backend
 
-// Fetch all topics
-export const fetchTopics = async (): Promise<TopicData[]> => {
-  const response = await apiRequest("GET", "/api/topics");
+// Fetch all topics or search topics
+export const fetchTopics = async (query?: string): Promise<TopicData[]> => {
+  const url = query ? `/api/topics?q=${encodeURIComponent(query)}` : "/api/topics";
+  const response = await apiRequest("GET", url);
   return await response.json();
 };
 

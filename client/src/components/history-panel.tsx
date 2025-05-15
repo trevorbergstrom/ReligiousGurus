@@ -1,7 +1,9 @@
 import { TopicData } from "@/types";
 import { formatRelative } from "date-fns";
-import { History, Clock, ArrowRight } from "lucide-react";
+import { History, Clock, ArrowRight, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useState } from "react";
 
 type HistoryPanelProps = {
   topics: TopicData[];

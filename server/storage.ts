@@ -10,7 +10,7 @@ import {
   WorldViewComparison
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, ilike, or } from "drizzle-orm";
 
 // Interface for storage operations
 export interface IStorage {
@@ -48,6 +48,19 @@ export class DatabaseStorage implements IStorage {
     return await db
       .select()
       .from(topics)
+      .orderBy(desc(topics.createdAt));
+  }
+  
+  async searchTopics(query: string): Promise<Topic[]> {
+    if (!query || query.trim() === '') {
+      return this.getAllTopics();
+    }
+    
+    const searchTerm = `%${query.trim()}%`;
+    return await db
+      .select()
+      .from(topics)
+      .where(ilike(topics.content, searchTerm))
       .orderBy(desc(topics.createdAt));
   }
 

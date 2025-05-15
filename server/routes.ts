@@ -11,11 +11,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // API routes
   
-  // Get all topics
+  // Get all topics or search topics
   app.get("/api/topics", async (req, res) => {
     try {
-      const topics = await storage.getAllTopics();
-      res.json(topics);
+      const query = req.query.q as string | undefined;
+      
+      if (query) {
+        // Search topics by query
+        const topics = await storage.searchTopics(query);
+        res.json(topics);
+      } else {
+        // Get all topics
+        const topics = await storage.getAllTopics();
+        res.json(topics);
+      }
     } catch (error) {
       console.error("Error fetching topics:", error);
       res.status(500).json({ message: "Failed to fetch topics" });
