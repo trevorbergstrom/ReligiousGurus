@@ -227,7 +227,20 @@ export default function Chat() {
       return (
         <div className="flex flex-col items-center justify-center h-64 space-y-4">
           <div className="text-center">
-            <p className="text-gray-500 mb-2">Your conversation with {currentSession ? getWorldViewName(currentSession.worldview as WorldView) : 'an expert'}</p>
+            <p className="text-gray-500 mb-2">
+              {currentSession?.isGroupChat
+                ? `Group conversation with ${
+                    Array.isArray(currentSession.worldviews) && currentSession.worldviews.length > 0
+                      ? currentSession.worldviews
+                          .slice(0, 3)
+                          .map(w => getWorldViewName(w as WorldView))
+                          .join(", ") + 
+                          (currentSession.worldviews.length > 3 ? ` and ${currentSession.worldviews.length - 3} more` : '')
+                      : "multiple worldviews"
+                  }`
+                : `Your conversation with ${currentSession ? getWorldViewName(currentSession.worldview as WorldView) : 'an expert'}`
+              }
+            </p>
             <p className="text-sm text-gray-400">Ask any questions about life, ethics, spirituality, or philosophy</p>
           </div>
           <div className="bg-slate-50 rounded-lg p-4 max-w-md">
@@ -437,14 +450,38 @@ export default function Chat() {
               <CardHeader className="py-3">
                 {currentSession && (
                   <CardTitle className="flex items-center">
-                    <WorldViewIcon
-                      worldview={currentSession.worldview as WorldView}
-                      size={20}
-                      className="mr-2"
-                    />
-                    <span className="text-sm">
-                      {getWorldViewName(currentSession.worldview as WorldView)}
-                    </span>
+                    {currentSession.isGroupChat ? (
+                      <>
+                        <div className="flex -space-x-2 mr-2">
+                          {Array.isArray(currentSession.worldviews) && currentSession.worldviews.slice(0, 3).map((worldview, index) => (
+                            <div key={index} className="border-2 border-white rounded-full">
+                              <WorldViewIcon
+                                worldview={worldview as WorldView}
+                                size={20}
+                                className="rounded-full"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                        <span className="text-sm">{currentSession.title || "Group Conversation"}</span>
+                        {Array.isArray(currentSession.worldviews) && currentSession.worldviews.length > 3 && (
+                          <span className="text-xs text-gray-500 ml-1">
+                            +{currentSession.worldviews.length - 3} more
+                          </span>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <WorldViewIcon
+                          worldview={currentSession.worldview as WorldView}
+                          size={20}
+                          className="mr-2"
+                        />
+                        <span className="text-sm">
+                          {getWorldViewName(currentSession.worldview as WorldView)}
+                        </span>
+                      </>
+                    )}
                   </CardTitle>
                 )}
               </CardHeader>
