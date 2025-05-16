@@ -303,13 +303,15 @@ const nodes = {
         try {
           let response;
           if (state.provider === ModelProvider.HUGGINGFACE) {
-            // Direct function call for Hugging Face
+            // Direct function call for Hugging Face - prioritize HF models
             const hfAgentFn = agentFn as (input: { topic: string }) => Promise<string>;
             response = await hfAgentFn({ topic: state.topic });
+            console.log(`Generated ${worldview} response using Hugging Face model:`, state.model);
           } else {
-            // RunnableSequence invoke for OpenAI
+            // RunnableSequence invoke for OpenAI (fallback)
             const openAIAgentFn = agentFn as RunnableSequence<any, string>;
             response = await openAIAgentFn.invoke({ topic: state.topic });
+            console.log(`Generated ${worldview} response using OpenAI model:`, state.model);
           }
           return { worldview, response, error: null };
         } catch (error) {
@@ -362,19 +364,21 @@ const nodes = {
       
       try {
         if (state.provider === ModelProvider.HUGGINGFACE) {
-          // Direct function call for Hugging Face
+          // Direct function call for Hugging Face - prioritize HF models
           const hfSummaryGen = summaryGen as (input: { topic: string, expertResponsesText: string }) => Promise<string>;
           summary = await hfSummaryGen({
             topic: state.topic,
             expertResponsesText
           });
+          console.log("Generated summary using Hugging Face model:", state.model);
         } else {
-          // RunnableSequence invoke for OpenAI
+          // RunnableSequence invoke for OpenAI (fallback)
           const openAISummaryGen = summaryGen as RunnableSequence<any, string>;
           summary = await openAISummaryGen.invoke({
             topic: state.topic,
             expertResponsesText
           });
+          console.log("Generated summary using OpenAI model:", state.model);
         }
       } catch (genError) {
         console.error("Error generating summary:", genError);
@@ -406,19 +410,21 @@ const nodes = {
       
       try {
         if (state.provider === ModelProvider.HUGGINGFACE) {
-          // Direct function call for Hugging Face
+          // Direct function call for Hugging Face - prioritize HF models
           const hfChartGen = chartDataGen as (input: { topic: string, expertResponsesText: string }) => Promise<ChartDataResponse>;
           chartJson = await hfChartGen({
             topic: state.topic,
             expertResponsesText
           });
+          console.log("Generated chart data using Hugging Face model:", state.model);
         } else {
-          // RunnableSequence invoke for OpenAI
+          // RunnableSequence invoke for OpenAI (fallback)
           const openAIChartGen = chartDataGen as RunnableSequence<any, ChartDataResponse>;
           chartJson = await openAIChartGen.invoke({
             topic: state.topic,
             expertResponsesText
           });
+          console.log("Generated chart data using OpenAI model:", state.model);
         }
       } catch (genError) {
         console.error("Error generating chart data:", genError);
@@ -543,19 +549,21 @@ const nodes = {
       
       try {
         if (state.provider === ModelProvider.HUGGINGFACE) {
-          // Direct function call for Hugging Face
+          // Direct function call for Hugging Face - prioritize HF models
           const hfCompGen = comparisonsGen as (input: { topic: string, expertResponsesText: string }) => Promise<ComparisonDataResponse>;
           comparisonData = await hfCompGen({
             topic: state.topic,
             expertResponsesText
           });
+          console.log("Generated comparisons using Hugging Face model:", state.model);
         } else {
-          // RunnableSequence invoke for OpenAI
+          // RunnableSequence invoke for OpenAI (fallback)
           const openAICompGen = comparisonsGen as RunnableSequence<any, ComparisonDataResponse>;
           comparisonData = await openAICompGen.invoke({
             topic: state.topic,
             expertResponsesText
           });
+          console.log("Generated comparisons using OpenAI model:", state.model);
         }
       } catch (genError) {
         console.error("Error generating comparisons:", genError);
@@ -645,12 +653,13 @@ export class LangGraphCoordinator {
   
   // Reset process details for a new request
   private resetProcessDetails() {
+    // Default to Hugging Face model as the priority
     this.processDetails = {
       expertPrompts: {},
       expertResponses: {},
       processingTimeMs: {},
-      model: DEFAULT_OPENAI_MODEL,
-      provider: ModelProvider.OPENAI,
+      model: AIModel.GEMMA_3_1B, // Prioritize Hugging Face model
+      provider: ModelProvider.HUGGINGFACE, // Prioritize Hugging Face provider
     };
   }
   
@@ -661,8 +670,8 @@ export class LangGraphCoordinator {
   
   async processTopic(
     topic: string, 
-    modelId: string = AIModel.GPT_4_O, 
-    provider: string = ModelProvider.OPENAI
+    modelId: string = AIModel.GEMMA_3_1B, // Prioritize Hugging Face model
+    provider: string = ModelProvider.HUGGINGFACE // Prioritize Hugging Face provider
   ): Promise<{
     summary: string;
     chartData: ChartData;
