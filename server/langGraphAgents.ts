@@ -84,8 +84,8 @@ const summaryGenerator = (() => {
 // Create a chart data generator
 const chartDataGenerator = (() => {
   const chartPrompt = ChatPromptTemplate.fromMessages([
-    ["system", "You are a data analyst specialized in comparative religion. Extract key language patterns from the worldviews' responses to generate meaningful visualization data."],
-    ["user", `Topic: "{topic}"\n\nWorldview responses:\n{expertResponsesText}\n\nAnalyze the language used in these responses and identify 3-4 key concepts or themes that appear across multiple worldviews. These should be naturally derived from the language used rather than predefined metrics. Then, score each worldview on these concepts based on how strongly they emphasize or relate to each concept (0-100). Return valid JSON data with a 'metrics' array (containing the concept names) and a 'scores' object mapping each worldview to its scores.`],
+    ["system", "You are a data analyst specialized in comparative religion. Extract key religious concepts and theological patterns from different worldviews."],
+    ["user", `Topic: "{topic}"\n\nWorldview responses:\n{expertResponsesText}\n\nAnalyze these responses and identify 3-4 key religious or theological concepts/themes that differ across these worldviews (such as: divine intervention, moral authority, soul existence, ritual importance, afterlife beliefs, etc.). Focus on substantive religious differences rather than stylistic language differences. Then, score each worldview on these concepts based on how strongly they emphasize or affirm each concept (0-100). Return valid JSON data with a 'metrics' array (containing the religious concept names) and a 'scores' object mapping each worldview to its scores.`],
   ]);
 
   return RunnableSequence.from([
