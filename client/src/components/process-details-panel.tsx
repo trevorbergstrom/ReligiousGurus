@@ -22,14 +22,19 @@ type ProcessDetailsPanelProps = {
 export default function ProcessDetailsPanel({ topicId, isOpen, onClose }: ProcessDetailsPanelProps) {
   const { toast } = useToast();
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
+  console.log("Process details panel opened for topic:", topicId);
   
   // Fetch process details
   const { data, isLoading, error } = useQuery({
     queryKey: ["/api/topics/process-details", topicId],
     queryFn: async () => {
+      console.log("Fetching process details for topic:", topicId);
       try {
-        return await fetchProcessDetails(topicId);
+        const result = await fetchProcessDetails(topicId);
+        console.log("Process details result:", result);
+        return result;
       } catch (error) {
+        console.error("Error fetching process details:", error);
         toast({
           title: "Information",
           description: "Process details are only available for the most recently processed topic.",
@@ -40,6 +45,7 @@ export default function ProcessDetailsPanel({ topicId, isOpen, onClose }: Proces
     },
     enabled: isOpen, // Only fetch when panel is open
     retry: false,
+    staleTime: 0, // Don't cache the result
   });
 
   if (!isOpen) return null;
@@ -53,7 +59,12 @@ export default function ProcessDetailsPanel({ topicId, isOpen, onClose }: Proces
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex justify-end overflow-hidden animate-in fade-in">
+    <div className="fixed inset-0 bg-black/50 z-50 flex justify-end overflow-hidden animate-in fade-in" onClick={(e) => {
+        // Prevent clicks inside the panel from closing it
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}>
       <div className="bg-white dark:bg-gray-900 w-full max-w-2xl h-full overflow-y-auto shadow-xl animate-in slide-in-from-right">
         <div className="sticky top-0 bg-teal-700 text-white p-4 z-10 flex justify-between items-center">
           <div className="flex items-center space-x-2">
