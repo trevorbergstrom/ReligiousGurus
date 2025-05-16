@@ -72,14 +72,19 @@ export const fetchChatMessages = async (sessionId: string): Promise<ChatMessage[
 };
 
 // Send a message in a chat session
-export const sendChatMessage = async (sessionId: string, content: string): Promise<{
+export const sendChatMessage = async (
+  sessionId: string, 
+  content: string, 
+  model?: string, 
+  provider?: string
+): Promise<{
   userMessage: ChatMessage;
   aiMessage: ChatMessage;
 }> => {
   const response = await apiRequest(
     "POST", 
     `/api/chat/sessions/${sessionId}/messages`, 
-    { content }
+    { content, model, provider }
   );
   return await response.json();
 };

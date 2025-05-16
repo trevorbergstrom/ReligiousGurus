@@ -3,6 +3,8 @@ import { ChartData, WorldViewComparison } from "@shared/schema";
 export interface TopicData {
   id: number;
   content: string;
+  model?: string;
+  provider?: string;
   createdAt: string; // ISO date string
 }
 

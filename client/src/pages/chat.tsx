@@ -18,9 +18,10 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { WorldView, ChatMessage, ChatSession } from '@shared/schema';
+import { WorldView, ChatMessage, ChatSession, AIModel, ModelProvider } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import ModelSelector from '@/components/model-selector';
 import { 
   fetchChatSessions,
   fetchChatSession,
@@ -48,6 +49,8 @@ export default function Chat() {
   const [location, setLocation] = useLocation();
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [message, setMessage] = useState('');
+  const [selectedModel, setSelectedModel] = useState<string>(AIModel.LLAMA_3_1B);
+  const [selectedProvider, setSelectedProvider] = useState<string>(ModelProvider.HUGGINGFACE);
   const [isCreatingSession, setIsCreatingSession] = useState(false);
   const [newSessionTitle, setNewSessionTitle] = useState('');
   const [newSessionWorldview, setNewSessionWorldview] = useState<string>(WorldView.CHRISTIANITY);
@@ -130,7 +133,7 @@ export default function Chat() {
   // Send message mutation
   const sendMessageMutation = useMutation({
     mutationFn: (content: string) => 
-      sendChatMessage(sessionId as string, content),
+      sendChatMessage(sessionId as string, content, selectedModel, selectedProvider),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/chat/sessions', sessionId, 'messages'] });
       setMessage('');
@@ -426,7 +429,15 @@ export default function Chat() {
               </CardContent>
               
               {sessionId && (
-                <CardFooter className="pt-4">
+                <CardFooter className="pt-4 flex-col space-y-3">
+                  <ModelSelector 
+                    selectedModel={selectedModel}
+                    onChange={(model, provider) => {
+                      setSelectedModel(model);
+                      setSelectedProvider(provider);
+                    }}
+                    disabled={sendMessageMutation.isPending}
+                  />
                   <form onSubmit={handleSubmit} className="w-full">
                     <div className="flex gap-2">
                       <Input
