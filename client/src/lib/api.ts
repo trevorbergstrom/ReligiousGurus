@@ -72,3 +72,9 @@ export const sendChatMessage = async (sessionId: string, content: string): Promi
   );
   return await response.json();
 };
+
+// Fetch the detailed process information for how a response was generated
+export const fetchProcessDetails = async (topicId: number): Promise<any> => {
+  const response = await apiRequest("GET", `/api/topics/${topicId}/process-details`);
+  return await response.json();
+};

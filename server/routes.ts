@@ -102,6 +102,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Response not found" });
       }
       
+      // Check if detailed process info was requested
+      const includeDetails = req.query.details === 'true';
+      
       res.json({
         topic,
         response
@@ -137,6 +140,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get process details for how responses are generated
+  app.get("/api/topics/:id/process-details", async (req, res) => {
+    try {
+      const topicId = parseInt(req.params.id);
+      
+      if (isNaN(topicId)) {
+        return res.status(400).json({ message: "Invalid topic ID" });
+      }
+      
+      // For now, we only have process details for the most recently processed topic
+      // In the future, we could store these in the database
+      const processDetails = langGraphCoordinator.getProcessDetails();
+      
+      if (!processDetails || Object.keys(processDetails).length === 0) {
+        return res.status(404).json({ 
+          message: "Process details not available for this topic. Only the most recently processed topic has details available."
+        });
+      }
+      
+      res.json({
+        topicId,
+        processDetails,
+        explanation: {
+          title: "How This Response Was Generated",
+          steps: [
+            "1. Expert agents for each worldview (Atheism, Christianity, Islam, etc.) analyzed your topic",
+            "2. A summary was generated highlighting key similarities and differences",
+            "3. Chart data was created to visualize concept importance across worldviews",
+            "4. Detailed comparisons were generated for each worldview"
+          ],
+          note: "This transparency feature helps you understand how AI generated this comparative analysis"
+        }
+      });
+    } catch (error) {
+      console.error("Error fetching process details:", error);
+      res.status(500).json({ message: "Failed to fetch process details" });
+    }
+  });
+  
   // CHAT ROUTES
   // Get all chat sessions
   app.get("/api/chat/sessions", async (req, res) => {

@@ -1,10 +1,11 @@
-import { useEffect, useRef } from "react";
-import { Share, Bookmark, Download } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Share, Bookmark, Download, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { WorldViewIcon, getWorldViewName } from "./world-view-icons";
 import { TopicResponsePair } from "@/types";
 import { WorldView } from "@shared/schema";
 import Chart from "chart.js/auto";
+import ProcessDetailsPanel from "./process-details-panel";
 
 type ResultsPanelProps = {
   data: TopicResponsePair | null;
