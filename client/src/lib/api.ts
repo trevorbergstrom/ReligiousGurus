@@ -14,14 +14,13 @@ export const fetchTopics = async (query?: string): Promise<TopicData[]> => {
 // Submit a new topic
 export const submitTopic = async (data: { 
   content: string, 
-  model?: string, 
-  provider?: string 
+  model?: string
 }): Promise<TopicResponsePair> => {
   // Apply defaults if not provided
   const payload = {
     content: data.content,
     model: data.model || AIModel.GPT_4_O,
-    provider: data.provider || ModelProvider.OPENAI
+    provider: ModelProvider.OPENAI
   };
   
   const response = await apiRequest("POST", "/api/topics", payload);
@@ -74,17 +73,21 @@ export const fetchChatMessages = async (sessionId: string): Promise<ChatMessage[
 // Send a message in a chat session
 export const sendChatMessage = async (
   sessionId: string, 
-  content: string, 
-  model?: string, 
-  provider?: string
+  data: { content: string, model?: string }
 ): Promise<{
   userMessage: ChatMessage;
   aiMessage: ChatMessage;
 }> => {
+  const payload = {
+    content: data.content,
+    model: data.model || AIModel.GPT_4_O,
+    provider: ModelProvider.OPENAI
+  };
+  
   const response = await apiRequest(
     "POST", 
     `/api/chat/sessions/${sessionId}/messages`, 
-    { content, model, provider }
+    payload
   );
   return await response.json();
 };

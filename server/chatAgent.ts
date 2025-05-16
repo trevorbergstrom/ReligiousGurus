@@ -3,14 +3,13 @@ import { ChatOpenAI } from "@langchain/openai";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
-import { generateTextWithHuggingFace, HuggingFaceModels } from "./huggingface";
 
 // The newest OpenAI model is "gpt-4o" which was released May 13, 2024
-const OPENAI_MODEL = "gpt-4o";
+const DEFAULT_MODEL = "gpt-4o";
 
 // Initialize the OpenAI model
-const model = new ChatOpenAI({
-  modelName: OPENAI_MODEL,
+const defaultModel = new ChatOpenAI({
+  modelName: DEFAULT_MODEL,
   temperature: 0.7, // Slightly higher temperature for more varied responses in chat
 });
 
@@ -48,61 +47,13 @@ export class WorldviewChatAgent {
   // Process a user message and return a response with model information
   public async processMessage(
     userMessage: string, 
-    model?: string, 
-    provider?: string
+    model: string = AIModel.GPT_4_O
   ): Promise<ChatResponse> {
     try {
-      // If Hugging Face is requested, try it
-      if (provider === ModelProvider.HUGGINGFACE && model) {
-        try {
-          console.log(`Attempting to use Hugging Face model: ${model}`);
-          
-          // Create system prompt for Hugging Face
-          const systemPrompt = `You are an educational expert on ${this.worldview}. 
-          Always provide factual, balanced, and educational responses about ${this.worldview}.
-          
-          Context information about this conversation:
-          ${this.context}
-          
-          Respond conversationally while staying true to ${this.worldview} perspectives.
-          Keep responses concise (1-3 paragraphs) and avoid unnecessarily formal academic language.`;
-          
-          // Directly use Hugging Face
-          const content = await generateTextWithHuggingFace(
-            model as HuggingFaceModels,
-            userMessage,
-            systemPrompt
-          );
-          
-          // Return content with Hugging Face model info
-          return {
-            content,
-            actualModel: model,
-            actualProvider: ModelProvider.HUGGINGFACE
-          };
-        } catch (error) {
-          // If Hugging Face fails, log it and fall back to OpenAI silently
-          const errorMessage = error instanceof Error ? error.message : String(error);
-          console.error(`Hugging Face error: ${errorMessage}`);
-          console.log("Falling back to OpenAI model");
-          
-          // Use default OpenAI fallback
-          const content = await this.chat.invoke({
-            context: this.context,
-            history: "",
-            userMessage
-          });
-          
-          // Return with OpenAI fallback information
-          return {
-            content,
-            actualModel: AIModel.GPT_4_O,
-            actualProvider: ModelProvider.OPENAI
-          };
-        }
-      } 
-      // If OpenAI is requested
-      else if (provider === ModelProvider.OPENAI && model) {
+      console.log(`Processing message with OpenAI model: ${model}`);
+      
+      // Use a specific OpenAI model if requested
+      if (model !== AIModel.GPT_4_O) {
         try {
           // Create a new OpenAI instance with the specific model
           const openaiModel = new ChatOpenAI({
@@ -154,7 +105,7 @@ export class WorldviewChatAgent {
         }
       }
       
-      // Default: Use the default chat agent (OpenAI)
+      // Default: Use the default chat agent (OpenAI gpt-4o)
       const content = await this.chat.invoke({
         context: this.context,
         history: "",
@@ -224,7 +175,7 @@ Respond conversationally while staying true to ${worldview} perspectives. Keep r
   
   return RunnableSequence.from([
     chatPrompt,
-    model,
+    defaultModel,
     new StringOutputParser(),
   ]);
 }

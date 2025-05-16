@@ -54,16 +54,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create the topic record
       const topic = await storage.createTopic({
         ...topicData, 
-        model: model || AIModel.LLAMA_3_1B,
-        provider: provider || ModelProvider.HUGGINGFACE
+        model: model || AIModel.GPT_4_O,
+        provider: provider || ModelProvider.OPENAI
       });
       
       // Process the topic with the coordinator (similar to GPT function calling)
       try {
         const result = await langGraphCoordinator.processTopic(
           topic.content, 
-          model,
-          provider
+          model || AIModel.GPT_4_O,
+          ModelProvider.OPENAI
         );
         
         // Store the generated response
@@ -343,14 +343,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const chatAgent = ChatAgentFactory.getAgent(worldviewEnum);
         
         // Get the model info from request
-        const requestedModel = req.body.model || AIModel.LLAMA_3_1B;
-        const requestedProvider = req.body.provider || ModelProvider.HUGGINGFACE;
+        const requestedModel = req.body.model || AIModel.GPT_4_O;
         
-        // Process the message using the chat agent - new response format includes model information
+        // Process the message using the chat agent
         const response = await chatAgent.processMessage(
           userMessage.content,
-          requestedModel,
-          requestedProvider
+          requestedModel
         );
         
         // Log the model that was actually used

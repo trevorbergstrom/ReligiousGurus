@@ -1,12 +1,20 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useLocation, useParams } from 'wouter';
-import { WorldViewIcon, getWorldViewName } from '@/components/world-view-icons';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { 
+import { useState, useRef, useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardHeader, CardContent, CardTitle, CardFooter } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -14,139 +22,121 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
-import { WorldView, ChatMessage, ChatSession, AIModel, ModelProvider } from '@shared/schema';
-import { useToast } from '@/hooks/use-toast';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import ModelSelector from '@/components/model-selector';
-import { 
-  fetchChatSessions,
-  fetchChatSession,
-  fetchChatMessages,
-  createChatSession,
-  deleteChatSession,
-  sendChatMessage
-} from '@/lib/api';
-
-// Get worldview colors for styling
-const getWorldViewColor = (worldview: string): string => {
-  switch (worldview) {
-    case 'christianity': return 'text-blue-600';
-    case 'islam': return 'text-green-600';
-    case 'hinduism': return 'text-orange-600';
-    case 'buddhism': return 'text-yellow-600';
-    case 'judaism': return 'text-purple-600';
-    case 'atheism': return 'text-red-600';
-    case 'agnosticism': return 'text-gray-600';
-    default: return 'text-slate-600';
-  }
-};
+  AlertDialogTitle
+} from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { WorldViewIcon, getWorldViewName, getWorldViewColor } from "@/components/world-view-icons";
+import { WorldView, type ChatMessage, type ChatSession, AIModel } from "@shared/schema";
+import { fetchChatSessions, fetchChatSession, createChatSession, deleteChatSession, fetchChatMessages, sendChatMessage } from "@/lib/api";
+import ModelSelector from "@/components/model-selector";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function Chat() {
-  const [location, setLocation] = useLocation();
-  const [sessionId, setSessionId] = useState<string | null>(null);
-  const [message, setMessage] = useState('');
-  const [selectedModel, setSelectedModel] = useState<string>(AIModel.LLAMA_3_1B);
-  const [selectedProvider, setSelectedProvider] = useState<string>(ModelProvider.HUGGINGFACE);
-  const [isCreatingSession, setIsCreatingSession] = useState(false);
-  const [newSessionTitle, setNewSessionTitle] = useState('');
-  const [newSessionWorldview, setNewSessionWorldview] = useState<string>(WorldView.CHRISTIANITY);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { toast } = useToast();
   const queryClient = useQueryClient();
-
-  // Query to fetch all sessions
+  const [message, setMessage] = useState<string>("");
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [isCreatingSession, setIsCreatingSession] = useState<boolean>(false);
+  const [newSessionWorldview, setNewSessionWorldview] = useState<string>(WorldView.CHRISTIANITY);
+  const [newSessionTitle, setNewSessionTitle] = useState<string>("");
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState<boolean>(false);
+  const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
+  const [selectedModel, setSelectedModel] = useState<string>(AIModel.GPT_4_O);
+  
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
+  const { toast } = useToast();
+  
+  // Fetch chat sessions
   const { data: sessions = [], isLoading: isLoadingSessions } = useQuery({
     queryKey: ['/api/chat/sessions'],
     queryFn: () => fetchChatSessions(),
   });
-
-  // Query to fetch messages for the current session
-  const { data: messages = [], isLoading: isLoadingMessages } = useQuery({
-    queryKey: ['/api/chat/sessions', sessionId, 'messages'],
-    queryFn: () => sessionId 
-      ? fetchChatMessages(sessionId) 
-      : Promise.resolve([]),
-    enabled: !!sessionId,
-  });
   
-  // Query to fetch the current session data
+  // Fetch current chat session data
   const { data: currentSession } = useQuery({
     queryKey: ['/api/chat/sessions', sessionId],
-    queryFn: () => sessionId 
-      ? fetchChatSession(sessionId) 
-      : Promise.resolve(null),
+    queryFn: () => fetchChatSession(sessionId!),
     enabled: !!sessionId,
   });
-
-  // Create a new session mutation
-  const createSessionMutation = useMutation({
-    mutationFn: (newSession: { worldview: string; title: string }) => 
-      createChatSession(newSession),
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/chat/sessions'] });
-      setSessionId(data.id);
-      setIsCreatingSession(false);
-      toast({
-        title: 'Session created',
-        description: `Started chat with ${getWorldViewName(data.worldview as WorldView)} expert.`,
-      });
-    },
-    onError: () => {
-      toast({
-        title: 'Error',
-        description: 'Failed to create chat session. Please try again.',
-        variant: 'destructive',
-      });
-    },
-  });
-
-  // Delete chat session mutation
-  const deleteSessionMutation = useMutation({
-    mutationFn: (id: string) => deleteChatSession(id),
-    onSuccess: () => {
-      if (sessionId === sessionToDelete) {
-        setSessionId(null); // Clear the current session if it was deleted
-      }
-      queryClient.invalidateQueries({ queryKey: ['/api/chat/sessions'] });
-      toast({
-        title: 'Session deleted',
-        description: 'Chat session was deleted successfully.',
-      });
-    },
-    onError: () => {
-      toast({
-        title: 'Error',
-        description: 'Failed to delete chat session. Please try again.',
-        variant: 'destructive',
-      });
-    },
+  
+  // Fetch messages for current session
+  const { data: messages = [], isLoading: isLoadingMessages } = useQuery({
+    queryKey: ['/api/chat/sessions', sessionId, 'messages'],
+    queryFn: () => fetchChatMessages(sessionId!),
+    enabled: !!sessionId,
   });
   
-  // Track the session being deleted for UI purposes
-  const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-
-  // Send message mutation
-  const sendMessageMutation = useMutation({
-    mutationFn: (content: string) => 
-      sendChatMessage(sessionId as string, content, selectedModel, selectedProvider),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/chat/sessions', sessionId, 'messages'] });
-      setMessage('');
+  // Create session mutation
+  const createSessionMutation = useMutation({
+    mutationFn: createChatSession,
+    onSuccess: (newSession) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/chat/sessions'] });
+      setSessionId(newSession.id);
+      setIsCreatingSession(false);
+      setNewSessionTitle("");
     },
-    onError: () => {
+    onError: (error) => {
       toast({
         title: 'Error',
-        description: 'Failed to send message. Please try again.',
+        description: `Failed to create chat session: ${error}`,
         variant: 'destructive',
       });
-    },
+    }
   });
-
+  
+  // Send message mutation
+  const sendMessageMutation = useMutation({
+    mutationFn: (content: string) => {
+      return sendChatMessage(sessionId!, {
+        content,
+        model: selectedModel
+      });
+    },
+    onSuccess: () => {
+      setMessage("");
+      queryClient.invalidateQueries({ queryKey: ['/api/chat/sessions', sessionId, 'messages'] });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description: `Failed to send message: ${error}`,
+        variant: 'destructive',
+      });
+    }
+  });
+  
+  // Delete session mutation
+  const deleteSessionMutation = useMutation({
+    mutationFn: deleteChatSession,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/chat/sessions'] });
+      
+      if (sessionToDelete === sessionId) {
+        setSessionId(null);
+      }
+      
+      setSessionToDelete(null);
+      toast({
+        title: 'Success',
+        description: 'Chat session deleted successfully',
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description: `Failed to delete chat session: ${error}`,
+        variant: 'destructive',
+      });
+    }
+  });
+  
   // Auto scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -273,19 +263,10 @@ export default function Chat() {
                   </span>
                   
                   {/* Model badge - only show for AI messages */}
-                  {msg.provider && msg.model && (
+                  {msg.model && (
                     <span className="ml-2 px-1.5 py-0.5 text-[10px] rounded-full bg-slate-200 text-slate-700 flex items-center">
-                      {msg.provider === "openai" ? (
-                        <>
-                          <span className="font-semibold mr-0.5">OpenAI</span>
-                          {msg.model.includes("gpt") && msg.model.split('/').pop()}
-                        </>
-                      ) : (
-                        <>
-                          <span className="font-semibold mr-0.5">Hugging Face</span>
-                          {msg.model.split('/').pop()}
-                        </>
-                      )}
+                      <span className="font-semibold mr-0.5">OpenAI</span>
+                      {msg.model.includes("gpt") && msg.model.replace("gpt-", "GPT-")}
                     </span>
                   )}
                 </div>
@@ -366,72 +347,14 @@ export default function Chat() {
             <TabsTrigger value="sessions" className="flex-1">Sessions</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="sessions">
+          <TabsContent value="chat" className="border rounded-md p-4">
             <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center justify-between">
-                  <span>Sessions</span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setIsCreatingSession(true)}
-                  >
-                    New
-                  </Button>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="max-h-[300px] overflow-y-auto">
-                {isLoadingSessions ? (
-                  <p className="text-center py-4">Loading sessions...</p>
-                ) : sessions.length === 0 ? (
-                  <p className="text-center py-4 text-gray-500">No sessions yet</p>
-                ) : (
-                  <div className="space-y-2">
-                    {sessions.map((session: ChatSession) => (
-                      <div key={session.id} className="flex items-center gap-2">
-                        <Button
-                          variant={sessionId === session.id ? "default" : "outline"}
-                          className="w-full justify-start"
-                          onClick={() => setSessionId(session.id)}
-                        >
-                          <div className="flex items-center">
-                            <WorldViewIcon
-                              worldview={session.worldview as WorldView}
-                              size={20}
-                              className="mr-2"
-                            />
-                            <div className="truncate">{session.title}</div>
-                          </div>
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="flex-shrink-0 text-red-500 hover:text-red-700 hover:bg-red-50"
-                          onClick={(e) => handleDeleteClick(e, session.id)}
-                          disabled={deleteSessionMutation.isPending}
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M3 6h18"></path>
-                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                          </svg>
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="chat" className="min-h-[70vh]">
-            <Card className="h-full flex flex-col">
-              <CardHeader className="pb-2">
+              <CardHeader className="py-3">
                 {currentSession && (
                   <CardTitle className="flex items-center">
                     <WorldViewIcon
                       worldview={currentSession.worldview as WorldView}
-                      size={24}
+                      size={20}
                       className="mr-2"
                     />
                     <span className="text-sm">
@@ -449,9 +372,8 @@ export default function Chat() {
                 <CardFooter className="pt-4 flex-col space-y-3">
                   <ModelSelector 
                     selectedModel={selectedModel}
-                    onChange={(model, provider) => {
+                    onChange={(model) => {
                       setSelectedModel(model);
-                      setSelectedProvider(provider);
                     }}
                     disabled={sendMessageMutation.isPending}
                   />
@@ -476,55 +398,50 @@ export default function Chat() {
               )}
             </Card>
           </TabsContent>
-        </Tabs>
-      </div>
-
-      {/* Desktop Layout */}
-      <div className="hidden md:grid grid-cols-1 md:grid-cols-4 gap-6">
-        {/* Sessions Sidebar */}
-        <div className="md:col-span-1">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center justify-between">
-                <span>Sessions</span>
-                <Button
-                  variant="outline"
-                  size="sm"
+          
+          <TabsContent value="sessions">
+            <div className="border rounded-md p-4 max-h-[70vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold">Your Conversations</h2>
+                <Button 
+                  size="sm" 
                   onClick={() => setIsCreatingSession(true)}
                 >
-                  New
+                  New Chat
                 </Button>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="max-h-[600px] overflow-y-auto">
+              </div>
+              
               {isLoadingSessions ? (
-                <p className="text-center py-4">Loading sessions...</p>
+                <p>Loading sessions...</p>
               ) : sessions.length === 0 ? (
-                <p className="text-center py-4 text-gray-500">No sessions yet</p>
+                <p className="text-gray-500 text-center py-8">No chat sessions yet. Start a new conversation!</p>
               ) : (
                 <div className="space-y-2">
                   {sessions.map((session: ChatSession) => (
-                    <div key={session.id} className="flex items-center gap-2">
-                      <Button
-                        variant={sessionId === session.id ? "default" : "outline"}
-                        className="w-full justify-start"
-                        onClick={() => setSessionId(session.id)}
-                      >
-                        <div className="flex items-center">
-                          <WorldViewIcon
-                            worldview={session.worldview as WorldView}
-                            size={20}
-                            className="mr-2"
-                          />
-                          <div className="truncate">{session.title}</div>
+                    <div
+                      key={session.id}
+                      onClick={() => setSessionId(session.id)}
+                      className={`p-3 border rounded-md cursor-pointer hover:bg-gray-50 flex justify-between items-center ${
+                        session.id === sessionId ? 'bg-blue-50 border-blue-200' : ''
+                      }`}
+                    >
+                      <div className="flex items-center">
+                        <WorldViewIcon
+                          worldview={session.worldview as WorldView}
+                          size={16}
+                          className="mr-2"
+                        />
+                        <div>
+                          <p className="font-medium text-sm">{session.title}</p>
+                          <p className="text-xs text-gray-500">
+                            {new Date(session.createdAt).toLocaleDateString()}
+                          </p>
                         </div>
-                      </Button>
+                      </div>
                       <Button
-                        size="sm"
                         variant="ghost"
-                        className="flex-shrink-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                        size="icon"
                         onClick={(e) => handleDeleteClick(e, session.id)}
-                        disabled={deleteSessionMutation.isPending}
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M3 6h18"></path>
@@ -536,82 +453,136 @@ export default function Chat() {
                   ))}
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
+      
+      {/* Desktop Layout */}
+      <div className="hidden md:grid grid-cols-12 gap-6">
+        {/* Sidebar */}
+        <div className="col-span-4 border rounded-md p-4 h-[calc(100vh-12rem)] flex flex-col">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold">Your Conversations</h2>
+            <Button 
+              size="sm" 
+              onClick={() => setIsCreatingSession(true)}
+            >
+              New Chat
+            </Button>
+          </div>
+          
+          <div className="flex-grow overflow-y-auto space-y-2">
+            {isLoadingSessions ? (
+              <p>Loading sessions...</p>
+            ) : sessions.length === 0 ? (
+              <p className="text-gray-500 text-center py-8">No chat sessions yet. Start a new conversation!</p>
+            ) : (
+              sessions.map((session: ChatSession) => (
+                <div
+                  key={session.id}
+                  onClick={() => setSessionId(session.id)}
+                  className={`p-3 border rounded-md cursor-pointer hover:bg-gray-50 flex justify-between items-center ${
+                    session.id === sessionId ? 'bg-blue-50 border-blue-200' : ''
+                  }`}
+                >
+                  <div className="flex items-center">
+                    <WorldViewIcon
+                      worldview={session.worldview as WorldView}
+                      size={16}
+                      className="mr-2 flex-shrink-0"
+                    />
+                    <div className="overflow-hidden">
+                      <p className="font-medium text-sm truncate">{session.title}</p>
+                      <p className="text-xs text-gray-500">
+                        {new Date(session.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="ml-2 flex-shrink-0"
+                    onClick={(e) => handleDeleteClick(e, session.id)}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M3 6h18"></path>
+                      <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                    </svg>
+                  </Button>
+                </div>
+              ))
+            )}
+          </div>
         </div>
         
         {/* Chat Area */}
-        <div className="md:col-span-3">
-          <Card className="h-full flex flex-col">
-            <CardHeader className="pb-2">
+        <div className="col-span-8">
+          <Card className="h-[calc(100vh-12rem)] flex flex-col">
+            <CardHeader className="py-3">
               {currentSession && (
                 <CardTitle className="flex items-center">
                   <WorldViewIcon
                     worldview={currentSession.worldview as WorldView}
-                    size={24}
+                    size={20}
                     className="mr-2"
                   />
-                  <span>
-                    Chat with {getWorldViewName(currentSession.worldview as WorldView)} Expert
-                  </span>
+                  <span>{getWorldViewName(currentSession.worldview as WorldView)}</span>
                 </CardTitle>
               )}
             </CardHeader>
             
-            <CardContent className="flex-grow overflow-y-auto pb-0 min-h-[400px] max-h-[600px]">
+            <CardContent className="flex-grow overflow-y-auto pb-0">
               {renderMessages()}
             </CardContent>
             
-            <CardFooter className="mt-auto pt-4">
-              {sessionId && (
-                <form onSubmit={handleSubmit} className="w-full flex items-center space-x-2">
-                  <Input
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    placeholder="Type your message..."
-                    disabled={sendMessageMutation.isPending}
-                  />
-                  <Button 
-                    type="submit" 
-                    disabled={!message.trim() || sendMessageMutation.isPending}
-                  >
-                    Send
-                  </Button>
+            {sessionId && (
+              <CardFooter className="pt-4 flex-col space-y-3">
+                <ModelSelector 
+                  selectedModel={selectedModel}
+                  onChange={(model) => {
+                    setSelectedModel(model);
+                  }}
+                  disabled={sendMessageMutation.isPending}
+                />
+                <form onSubmit={handleSubmit} className="w-full">
+                  <div className="flex gap-2">
+                    <Input
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      placeholder="Type your message..."
+                      className="flex-grow"
+                      disabled={sendMessageMutation.isPending}
+                    />
+                    <Button 
+                      type="submit" 
+                      disabled={!message.trim() || sendMessageMutation.isPending}
+                    >
+                      Send
+                    </Button>
+                  </div>
                 </form>
-              )}
-            </CardFooter>
+              </CardFooter>
+            )}
           </Card>
         </div>
       </div>
-
-      {/* New Session Dialog */}
+      
+      {/* Create Session Dialog */}
       <Dialog open={isCreatingSession} onOpenChange={setIsCreatingSession}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Start a New Chat</DialogTitle>
+            <DialogTitle>Create New Chat</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <label htmlFor="topic" className="text-sm font-medium">
-                Chat Topic
-              </label>
-              <Input
-                id="topic"
-                value={newSessionTitle}
-                onChange={(e) => setNewSessionTitle(e.target.value)}
-                placeholder="Enter a topic or title for this chat"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="worldview" className="text-sm font-medium">
-                Worldview Expert
-              </label>
+              <Label htmlFor="worldview">Select Worldview</Label>
               <Select
                 value={newSessionWorldview}
                 onValueChange={setNewSessionWorldview}
               >
-                <SelectTrigger id="worldview">
+                <SelectTrigger>
                   <SelectValue placeholder="Select a worldview" />
                 </SelectTrigger>
                 <SelectContent>
@@ -630,25 +601,30 @@ export default function Chat() {
                 </SelectContent>
               </Select>
             </div>
-            
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button
-                variant="outline"
-                onClick={() => setIsCreatingSession(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleCreateSession}
-                disabled={!newSessionTitle.trim() || createSessionMutation.isPending}
-              >
-                Start Chat
-              </Button>
+            <div className="space-y-2">
+              <Label htmlFor="title">Chat Title</Label>
+              <Input
+                id="title"
+                value={newSessionTitle}
+                onChange={(e) => setNewSessionTitle(e.target.value)}
+                placeholder="E.g., Questions about meditation"
+              />
             </div>
           </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </DialogClose>
+            <Button
+              onClick={handleCreateSession}
+              disabled={createSessionMutation.isPending}
+            >
+              Create Chat
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
-
+      
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
         <AlertDialogContent>
@@ -661,9 +637,7 @@ export default function Chat() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} className="bg-red-500 text-white hover:bg-red-600">
-              Delete
-            </AlertDialogAction>
+            <AlertDialogAction onClick={confirmDelete}>Delete</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

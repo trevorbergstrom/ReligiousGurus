@@ -3,72 +3,56 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { randomUUID } from "crypto";
 
-// Available models
+// Available models - using only OpenAI models
 export enum AIModel {
-  // Free-tier models more likely to work with standard API key
-  GPT2 = "gpt2", // Listed first to make it default
-  DISTILGPT2 = "distilgpt2",
-  BLOOM = "bigscience/bloom-560m",
-  FLAN_T5 = "google/flan-t5-base",
-  FALCON = "tiiuae/falcon-7b-instruct",
-  
-  // OpenAI model
   GPT_4_O = "gpt-4o",
-  
-  // Premium models that may require special access
-  LLAMA_3_1B = "meta-llama/Llama-3.2-1B-Instruct",
-  GEMMA_3_1B = "google/gemma-3-1b-it",
-  QWEN_7B = "Qwen/Qwen2.5-7B-Instruct",
-  MISTRAL_7B = "mistralai/Mistral-7B-Instruct-v0.2",
-  PHI_2 = "microsoft/phi-2",
-  LLAMA_2_7B = "meta-llama/Llama-2-7b-chat-hf"
+  GPT_4 = "gpt-4",
+  GPT_3_5_TURBO = "gpt-3.5-turbo"
 }
 
 export enum ModelProvider {
   OPENAI = "openai",
-  HUGGINGFACE = "huggingface",
 }
 
 // Topic schema
 export const topics = pgTable("topics", {
   id: serial("id").primaryKey(),
   content: text("content").notNull(),
-  model: text("model").notNull().default(AIModel.GPT_4_O),
-  provider: text("provider").notNull().default(ModelProvider.OPENAI),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  model: text("model").default(AIModel.GPT_4_O).notNull(),
+  provider: text("provider").default(ModelProvider.OPENAI).notNull()
 });
 
 export const insertTopicSchema = createInsertSchema(topics).pick({
   content: true,
   model: true,
-  provider: true,
+  provider: true
 });
 
-// Response schema for storing the coordinator and expert responses
+// Response schema
 export const responses = pgTable("responses", {
   id: serial("id").primaryKey(),
-  topicId: integer("topic_id").notNull().references(() => topics.id),
+  topicId: integer("topic_id").references(() => topics.id).notNull(),
   summary: text("summary").notNull(),
   chartData: jsonb("chart_data").notNull(),
   comparisons: jsonb("comparisons").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
 export const insertResponseSchema = createInsertSchema(responses).pick({
   topicId: true,
   summary: true,
   chartData: true,
-  comparisons: true,
+  comparisons: true
 });
 
-// Define types
 export type InsertTopic = z.infer<typeof insertTopicSchema>;
 export type Topic = typeof topics.$inferSelect;
 
 export type InsertResponse = z.infer<typeof insertResponseSchema>;
 export type Response = typeof responses.$inferSelect;
 
-// WorldViews enum
+// Worldview enum
 export enum WorldView {
   ATHEISM = "atheism",
   AGNOSTICISM = "agnosticism",
@@ -80,7 +64,7 @@ export enum WorldView {
   SIKHISM = "sikhism",
 }
 
-// Chart data types for the frontend
+// Chart data types
 export type ChartData = {
   labels: string[];
   datasets: {
@@ -92,7 +76,6 @@ export type ChartData = {
   }[];
 };
 
-// Comparison data for the table
 export type WorldViewComparison = {
   worldview: WorldView;
   summary: string;
@@ -100,28 +83,28 @@ export type WorldViewComparison = {
   afterlifeType: string;
 };
 
-// Chat conversations
+// Chat session schema
 export const chatSessions = pgTable("chat_sessions", {
   id: uuid("id").primaryKey().defaultRandom(),
   worldview: text("worldview").notNull(),
   title: text("title").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
 export const insertChatSessionSchema = createInsertSchema(chatSessions).pick({
   worldview: true,
-  title: true,
+  title: true
 });
 
-// Chat messages
+// Chat message schema
 export const chatMessages = pgTable("chat_messages", {
   id: serial("id").primaryKey(),
-  sessionId: uuid("session_id").notNull().references(() => chatSessions.id),
+  sessionId: uuid("session_id").references(() => chatSessions.id).notNull(),
   content: text("content").notNull(),
-  isUser: boolean("is_user").notNull(),
-  model: text("model"),
-  provider: text("provider"),
+  isUser: boolean("is_user").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  model: text("model").default(AIModel.GPT_4_O),
+  provider: text("provider").default(ModelProvider.OPENAI)
 });
 
 export const insertChatMessageSchema = createInsertSchema(chatMessages).pick({
@@ -129,12 +112,22 @@ export const insertChatMessageSchema = createInsertSchema(chatMessages).pick({
   content: true,
   isUser: true,
   model: true,
-  provider: true,
+  provider: true
 });
 
-// Define types for chat
 export type InsertChatSession = z.infer<typeof insertChatSessionSchema>;
 export type ChatSession = typeof chatSessions.$inferSelect;
 
 export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;
 export type ChatMessage = typeof chatMessages.$inferSelect;
+
+// Topic/Response pair type for frontend
+export type TopicResponsePair = {
+  topic: Topic;
+  response: Response;
+};
+
+// Topic data with metadata for frontend
+export type TopicData = Topic & {
+  hasResponse: boolean;
+};
