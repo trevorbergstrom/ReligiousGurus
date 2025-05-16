@@ -45,110 +45,95 @@ export class WorldviewChatAgent {
     provider?: string
   ): Promise<string> {
     try {
-      if (model && provider === 'huggingface') {
+      // If Hugging Face is requested, try it
+      if (provider === ModelProvider.HUGGINGFACE && model) {
         try {
-          // Try Hugging Face first
-          console.log(`Attempting to use Hugging Face model for ${this.worldview} chat`);
+          console.log(`Attempting to use Hugging Face model: ${model}`);
           
-          // Create a system prompt for Hugging Face
+          // Create system prompt for Hugging Face
           const systemPrompt = `You are an educational expert on ${this.worldview}. 
-            Always provide factual, balanced, and educational responses about ${this.worldview}.
-            
-            Context information about this conversation:
-            ${this.context}
-            
-            Respond conversationally while staying true to ${this.worldview} perspectives.
-            Keep responses concise (1-3 paragraphs) and avoid unnecessarily formal academic language.`;
-            
-          // Use Hugging Face directly
+          Always provide factual, balanced, and educational responses about ${this.worldview}.
+          
+          Context information about this conversation:
+          ${this.context}
+          
+          Respond conversationally while staying true to ${this.worldview} perspectives.
+          Keep responses concise (1-3 paragraphs) and avoid unnecessarily formal academic language.`;
+          
+          // Directly use Hugging Face
           return await generateTextWithHuggingFace(
             model as HuggingFaceModels,
             userMessage,
             systemPrompt
           );
-        } catch (hfError) {
-          console.error(`Hugging Face error: ${hfError.message}. Falling back to OpenAI.`);
+        } catch (error) {
+          // If Hugging Face fails, log it and fall back to OpenAI silently
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          console.error(`Hugging Face error: ${errorMessage}`);
+          console.log("Falling back to OpenAI model");
           
-          // Fall back to OpenAI
-          const fallbackModel = new ChatOpenAI({
-            modelName: "gpt-4o", // Use a reliable model as fallback
+          // Use default OpenAI fallback
+          const result = await this.chat.invoke({
+            context: this.context,
+            history: "",
+            userMessage
+          });
+          
+          return result;
+        }
+      } 
+      // If OpenAI is requested
+      else if (provider === ModelProvider.OPENAI && model) {
+        try {
+          // Create a new OpenAI instance with the specific model
+          const openaiModel = new ChatOpenAI({
+            modelName: model,
             temperature: 0.7,
           });
           
-          const fallbackPrompt = ChatPromptTemplate.fromMessages([
-            ["system", `You are an educational expert on ${this.worldview}.
+          const chatPrompt = ChatPromptTemplate.fromMessages([
+            ["system", `You are an educational expert on ${this.worldview}. 
               Always provide factual, balanced, and educational responses about ${this.worldview}.
               
               Context information about this conversation:
               ${this.context}
               
-              Respond conversationally while staying true to ${this.worldview} perspectives.
-              Important note: The user selected a Hugging Face model, but we had to fall back to using
-              OpenAI's GPT-4o due to technical issues. Do not mention this in your response.`],
-            ["user", userMessage],
+              Respond conversationally while staying true to ${this.worldview} perspectives.`],
+            ["user", "{userMessage}"],
           ]);
           
-          const result = await fallbackModel.invoke(fallbackPrompt.format({
+          const chain = RunnableSequence.from([
+            chatPrompt,
+            openaiModel,
+            new StringOutputParser(),
+          ]);
+          
+          return await chain.invoke({
+            userMessage
+          });
+        } catch (error) {
+          console.error(`OpenAI specific model error: ${error}`);
+          
+          // Fall back to default OpenAI model
+          const result = await this.chat.invoke({
             context: this.context,
             history: "",
-            userMessage: userMessage
-          }));
+            userMessage
+          });
           
-          return result.content as string;
+          return result;
         }
-      } 
-      else if (model && provider === 'openai') {
-        // Use OpenAI with specific model
-        const chatModel = new ChatOpenAI({
-          modelName: model,
-          temperature: 0.7,
-        });
-        
-        const chatPrompt = ChatPromptTemplate.fromMessages([
-          ["system", `You are an educational expert on ${this.worldview}.
-            Always provide factual, balanced, and educational responses about ${this.worldview}.
-            
-            Context information about this conversation:
-            ${this.context}
-            
-            Respond conversationally while staying true to ${this.worldview} perspectives.`],
-          ["user", userMessage],
-        ]);
-        
-        const result = await chatModel.invoke(chatPrompt.format({
-          context: this.context,
-          history: "",
-          userMessage: userMessage
-        }));
-        
-        return result.content as string;
       }
-      else {
-        // Use default OpenAI model
-        const result = await this.chat.invoke({
-          context: this.context,
-          history: "",
-          userMessage
-        });
-        
-        return result;
-      }
+      
+      // Default: Use the default chat agent
+      return await this.chat.invoke({
+        context: this.context,
+        history: "",
+        userMessage
+      });
     } catch (error) {
       console.error(`Error in ${this.worldview} chat agent:`, error);
-      
-      // Final fallback - use the default OpenAI model
-      try {
-        console.log("Using final fallback to default OpenAI model");
-        const result = await this.chat.invoke({
-          context: this.context,
-          history: "",
-          userMessage
-        });
-        
-        return result;
-      } catch (finalError) {
-        return `I apologize, but I'm having trouble processing your request about ${this.worldview}. Could you try again later?`;
-      }
+      return `I apologize, but I'm having trouble processing your request about ${this.worldview}. Could you try asking in a different way?`;
     }
   }
 }
