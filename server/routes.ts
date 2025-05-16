@@ -365,17 +365,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
               );
               
               // Create an AI message prefixed with the worldview name
-              // Import the function from world-view-icons if needed
-              let viewName = worldviewEnum;
-              // Simple mapping for worldview names if needed
-              if (worldviewEnum === WorldView.CHRISTIANITY) viewName = "Christianity";
-              if (worldviewEnum === WorldView.ISLAM) viewName = "Islam";
-              if (worldviewEnum === WorldView.BUDDHISM) viewName = "Buddhism";
-              if (worldviewEnum === WorldView.HINDUISM) viewName = "Hinduism";
-              if (worldviewEnum === WorldView.JUDAISM) viewName = "Judaism";
-              if (worldviewEnum === WorldView.SIKHISM) viewName = "Sikhism";
-              if (worldviewEnum === WorldView.ATHEISM) viewName = "Atheism";
-              if (worldviewEnum === WorldView.AGNOSTICISM) viewName = "Agnosticism";
+              let viewName = '';
+              
+              // Simple mapping for worldview names
+              switch (worldviewEnum) {
+                case WorldView.CHRISTIANITY:
+                  viewName = "Christianity";
+                  break;
+                case WorldView.ISLAM:
+                  viewName = "Islam";
+                  break;
+                case WorldView.BUDDHISM:
+                  viewName = "Buddhism";
+                  break;
+                case WorldView.HINDUISM:
+                  viewName = "Hinduism";
+                  break;
+                case WorldView.JUDAISM:
+                  viewName = "Judaism";
+                  break;
+                case WorldView.SIKHISM:
+                  viewName = "Sikhism";
+                  break;
+                case WorldView.ATHEISM:
+                  viewName = "Atheism";
+                  break;
+                case WorldView.AGNOSTICISM:
+                  viewName = "Agnosticism";
+                  break;
+                default:
+                  viewName = String(worldviewEnum);
+              }
               
               const content = `**${viewName} perspective:**\n${response.content}`;
               

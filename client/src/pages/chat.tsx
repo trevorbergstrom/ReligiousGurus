@@ -608,12 +608,38 @@ export default function Chat() {
             <CardHeader className="py-3">
               {currentSession && (
                 <CardTitle className="flex items-center">
-                  <WorldViewIcon
-                    worldview={currentSession.worldview as WorldView}
-                    size={20}
-                    className="mr-2"
-                  />
-                  <span>{getWorldViewName(currentSession.worldview as WorldView)}</span>
+                  {currentSession.isGroupChat ? (
+                    <>
+                      {/* Group chat title with multiple icons */}
+                      <div className="flex -space-x-2 mr-2">
+                        {Array.isArray(currentSession.worldviews) && currentSession.worldviews.slice(0, 3).map((worldview, index) => (
+                          <div key={index} className="border-2 border-white rounded-full">
+                            <WorldViewIcon
+                              worldview={worldview as WorldView}
+                              size={20}
+                              className="rounded-full"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                      <span className="ml-2">{currentSession.title}</span>
+                      {Array.isArray(currentSession.worldviews) && currentSession.worldviews.length > 3 && (
+                        <span className="text-xs text-gray-500 ml-1">
+                          +{currentSession.worldviews.length - 3} more
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      {/* Single worldview chat title */}
+                      <WorldViewIcon
+                        worldview={currentSession.worldview as WorldView}
+                        size={20}
+                        className="mr-2"
+                      />
+                      <span>{getWorldViewName(currentSession.worldview as WorldView)}</span>
+                    </>
+                  )}
                 </CardTitle>
               )}
             </CardHeader>
