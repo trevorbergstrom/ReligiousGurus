@@ -403,6 +403,8 @@ export class LangGraphCoordinator {
   // Track process details for transparency
   private processDetails: {
     topic?: string;
+    model?: string;
+    provider?: string;
     expertPrompts?: Record<string, string>;
     expertResponses?: Record<string, string>;
     summaryPrompt?: string;
@@ -426,6 +428,8 @@ export class LangGraphCoordinator {
       expertPrompts: {},
       expertResponses: {},
       processingTimeMs: {},
+      model: DEFAULT_OPENAI_MODEL,
+      provider: ModelProvider.OPENAI,
     };
   }
   

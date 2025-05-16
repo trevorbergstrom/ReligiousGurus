@@ -52,8 +52,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create the topic
       const topic = await storage.createTopic(validatedData);
       
-      // Process the topic with the LangGraph coordinator agent
-      const processedResponse = await langGraphCoordinator.processTopic(topic.content);
+      // Process the topic with the LangGraph coordinator agent using the selected model
+      const processedResponse = await langGraphCoordinator.processTopic(
+        topic.content,
+        topic.model,
+        topic.provider
+      );
       
       // Store the response
       const response = await storage.createResponse({

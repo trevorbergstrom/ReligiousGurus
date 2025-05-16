@@ -21,14 +21,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import ModelSelector from "@/components/model-selector";
+import { AIModel, ModelProvider } from "@shared/schema";
 
 const topicSchema = z.object({
   content: z.string().min(1, "Please enter a topic"),
+  model: z.string().default(AIModel.GPT_4_O),
+  provider: z.string().default(ModelProvider.OPENAI),
 });
 
 type TopicFormProps = {
   topics: TopicData[];
-  onSubmit: (content: string) => void;
+  onSubmit: (content: string, model: string, provider: string) => void;
   onSelectTopic: (topicId: number) => void;
   isLoading: boolean;
 };
