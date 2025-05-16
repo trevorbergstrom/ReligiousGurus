@@ -95,7 +95,7 @@ export default function ResultsPanel({ data, isLoading }: ResultsPanelProps) {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-xl font-semibold">{topic.content}</h2>
-          <p className="text-sm text-slate-500">Comparing 7 worldviews</p>
+          <p className="text-sm text-slate-500">Comparing 8 worldviews</p>
         </div>
         <div className="flex space-x-2">
           <Button

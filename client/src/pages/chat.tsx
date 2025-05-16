@@ -338,7 +338,121 @@ export default function Chat() {
         </div>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      {/* Mobile Tabs for Sessions/Chat */}
+      <div className="block md:hidden mb-4">
+        <Tabs defaultValue="chat">
+          <TabsList className="w-full">
+            <TabsTrigger value="chat" className="flex-1">Chat</TabsTrigger>
+            <TabsTrigger value="sessions" className="flex-1">Sessions</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="sessions">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center justify-between">
+                  <span>Sessions</span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsCreatingSession(true)}
+                  >
+                    New
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="max-h-[300px] overflow-y-auto">
+                {isLoadingSessions ? (
+                  <p className="text-center py-4">Loading sessions...</p>
+                ) : sessions.length === 0 ? (
+                  <p className="text-center py-4 text-gray-500">No sessions yet</p>
+                ) : (
+                  <div className="space-y-2">
+                    {sessions.map((session: ChatSession) => (
+                      <div key={session.id} className="flex items-center gap-2">
+                        <Button
+                          variant={sessionId === session.id ? "default" : "outline"}
+                          className="w-full justify-start"
+                          onClick={() => setSessionId(session.id)}
+                        >
+                          <div className="flex items-center">
+                            <WorldViewIcon
+                              worldview={session.worldview as WorldView}
+                              size={20}
+                              className="mr-2"
+                            />
+                            <div className="truncate">{session.title}</div>
+                          </div>
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="flex-shrink-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                          onClick={(e) => handleDeleteClick(e, session.id)}
+                          disabled={deleteSessionMutation.isPending}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M3 6h18"></path>
+                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                          </svg>
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="chat" className="min-h-[70vh]">
+            <Card className="h-full flex flex-col">
+              <CardHeader className="pb-2">
+                {currentSession && (
+                  <CardTitle className="flex items-center">
+                    <WorldViewIcon
+                      worldview={currentSession.worldview as WorldView}
+                      size={24}
+                      className="mr-2"
+                    />
+                    <span className="text-sm">
+                      {getWorldViewName(currentSession.worldview as WorldView)}
+                    </span>
+                  </CardTitle>
+                )}
+              </CardHeader>
+              
+              <CardContent className="flex-grow overflow-y-auto pb-0 min-h-[400px]">
+                {renderMessages()}
+              </CardContent>
+              
+              {sessionId && (
+                <CardFooter className="pt-4">
+                  <form onSubmit={handleSubmit} className="w-full">
+                    <div className="flex gap-2">
+                      <Input
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        placeholder="Type your message..."
+                        className="flex-grow"
+                        disabled={sendMessageMutation.isPending}
+                      />
+                      <Button 
+                        type="submit" 
+                        disabled={!message.trim() || sendMessageMutation.isPending}
+                      >
+                        Send
+                      </Button>
+                    </div>
+                  </form>
+                </CardFooter>
+              )}
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+
+      {/* Desktop Layout */}
+      <div className="hidden md:grid grid-cols-1 md:grid-cols-4 gap-6">
         {/* Sessions Sidebar */}
         <div className="md:col-span-1">
           <Card>
