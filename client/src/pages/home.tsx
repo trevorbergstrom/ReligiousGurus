@@ -1,12 +1,10 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { TopicData, TopicResponsePair } from "@/types";
-import Header from "@/components/header";
 import TopicForm from "@/components/topic-form";
 import HistoryPanel from "@/components/history-panel";
 import ResultsPanel from "@/components/results-panel";
 import MediaGallery from "@/components/media-gallery";
-import Footer from "@/components/footer";
 import { fetchTopics, submitTopic, fetchResponse } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 
@@ -87,10 +85,13 @@ export default function Home() {
   const isLoading = isSubmitting || isFetching;
   
   return (
-    <div className="bg-slate-50 min-h-screen flex flex-col">
-      <Header />
-      
+    <div>
       <main className="container mx-auto px-4 py-6 flex-grow">
+        <h1 className="text-3xl font-bold text-center mb-6">Welcome to Religious Gurus</h1>
+        <p className="text-center text-lg mb-8 max-w-3xl mx-auto">
+          Enter a topic or question to explore how different worldviews interpret it.
+        </p>
+        
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column (Input and History) */}
           <div className="lg:col-span-1 order-2 lg:order-1">
@@ -131,8 +132,6 @@ export default function Home() {
           </div>
         </div>
       </main>
-      
-      <Footer />
     </div>
   );
 }
