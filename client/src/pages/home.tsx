@@ -5,7 +5,7 @@ import TopicForm from "@/components/topic-form";
 import HistoryPanel from "@/components/history-panel";
 import ResultsPanel from "@/components/results-panel";
 import MediaGallery from "@/components/media-gallery";
-import { fetchTopics, submitTopic, fetchResponse } from "@/lib/api";
+import { fetchTopics, submitTopic, fetchResponse, deleteTopic } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Home() {
@@ -68,6 +68,33 @@ export default function Home() {
     },
   });
   
+  // Delete a topic
+  const { mutate: deleteSpecificTopic, isPending: isDeleting } = useMutation({
+    mutationFn: deleteTopic,
+    onSuccess: () => {
+      // Clear current topic response if it was the deleted one
+      if (currentTopicResponse && topicToDelete === currentTopicResponse.topic.id) {
+        setCurrentTopicResponse(null);
+      }
+      // Invalidate queries to refresh the topics list
+      queryClient.invalidateQueries({ queryKey: ["/api/topics"] });
+      toast({
+        title: "Success",
+        description: "Topic deleted successfully!",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to delete topic. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Track the topic being deleted for UI purposes
+  const [topicToDelete, setTopicToDelete] = useState<number | null>(null);
+  
   const handleTopicSubmit = (content: string) => {
     // Clear any search when submitting a new topic
     setSearchQuery(undefined);
@@ -108,6 +135,10 @@ export default function Home() {
                   topics={topics}
                   onSelectTopic={handleSelectTopic}
                   onSearch={handleSearch}
+                  onDeleteTopic={(topicId) => {
+                    setTopicToDelete(topicId);
+                    deleteSpecificTopic(topicId);
+                  }}
                 />
               </div>
             </div>
@@ -125,6 +156,10 @@ export default function Home() {
                 topics={topics}
                 onSelectTopic={handleSelectTopic}
                 onSearch={handleSearch}
+                onDeleteTopic={(topicId) => {
+                  setTopicToDelete(topicId);
+                  deleteSpecificTopic(topicId);
+                }}
               />
             </div>
             
