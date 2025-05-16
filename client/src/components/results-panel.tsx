@@ -136,28 +136,29 @@ export default function ResultsPanel({ data, isLoading }: ResultsPanelProps) {
       {/* Worldview Symbols */}
       <div className="mb-8">
         <h3 className="font-semibold text-lg mb-3">Worldviews Compared</h3>
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-4 mb-4">
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-3 md:gap-4 mb-4">
           {Object.values(WorldView).map((worldview) => {
             // Use the icon color specific to each worldview
             const bgColorClass = (() => {
               switch(worldview) {
                 case WorldView.ATHEISM: return "bg-slate-600";
-                case WorldView.AGNOSTICISM: return "bg-slate-500";
-                case WorldView.CHRISTIANITY: return "bg-blue-600";
-                case WorldView.ISLAM: return "bg-emerald-600";
-                case WorldView.HINDUISM: return "bg-fuchsia-500";
-                case WorldView.BUDDHISM: return "bg-amber-500";
+                case WorldView.AGNOSTICISM: return "bg-zinc-500";
+                case WorldView.CHRISTIANITY: return "bg-blue-700";
+                case WorldView.ISLAM: return "bg-teal-500";
+                case WorldView.HINDUISM: return "bg-purple-600";
+                case WorldView.BUDDHISM: return "bg-amber-700";
                 case WorldView.JUDAISM: return "bg-indigo-600";
+                case WorldView.SIKHISM: return "bg-rose-800";
                 default: return "bg-slate-600";
               }
             })();
             
             return (
               <div key={worldview} className="flex flex-col items-center transform transition-transform hover:scale-110">
-                <div className={`w-16 h-16 rounded-full ${bgColorClass} flex items-center justify-center mb-2 shadow-md`}>
-                  <WorldViewIcon worldview={worldview} size={28} className="text-white" />
+                <div className={`w-12 h-12 md:w-16 md:h-16 rounded-full ${bgColorClass} flex items-center justify-center mb-2 shadow-md touch-target`}>
+                  <WorldViewIcon worldview={worldview} size={24} className="text-white" />
                 </div>
-                <span className="text-sm font-medium text-center">
+                <span className="text-xs md:text-sm font-medium text-center">
                   {getWorldViewName(worldview)}
                 </span>
               </div>
@@ -186,16 +187,16 @@ export default function ResultsPanel({ data, isLoading }: ResultsPanelProps) {
           <table className="min-w-full border-collapse">
             <thead>
               <tr className="bg-gradient-to-r from-slate-100 to-slate-50">
-                <th className="py-4 px-5 text-left font-semibold text-slate-700 border-b border-slate-200">
+                <th className="py-3 md:py-4 px-3 md:px-5 text-left font-semibold text-slate-700 border-b border-slate-200">
                   Worldview
                 </th>
-                <th className="py-4 px-5 text-left font-semibold text-slate-700 border-b border-slate-200">
+                <th className="py-3 md:py-4 px-3 md:px-5 text-left font-semibold text-slate-700 border-b border-slate-200 hidden md:table-cell">
                   Summary
                 </th>
-                <th className="py-4 px-5 text-left font-semibold text-slate-700 border-b border-slate-200">
+                <th className="py-3 md:py-4 px-3 md:px-5 text-left font-semibold text-slate-700 border-b border-slate-200 hidden md:table-cell">
                   Key Concepts
                 </th>
-                <th className="py-4 px-5 text-left font-semibold text-slate-700 border-b border-slate-200">
+                <th className="py-3 md:py-4 px-3 md:px-5 text-left font-semibold text-slate-700 border-b border-slate-200 hidden md:table-cell">
                   Afterlife Type
                 </th>
               </tr>
@@ -206,47 +207,93 @@ export default function ResultsPanel({ data, isLoading }: ResultsPanelProps) {
                 const worldviewColor = (() => {
                   switch(comparison.worldview) {
                     case WorldView.ATHEISM: return "text-slate-600";
-                    case WorldView.AGNOSTICISM: return "text-slate-500";
-                    case WorldView.CHRISTIANITY: return "text-blue-600";
-                    case WorldView.ISLAM: return "text-emerald-600";
-                    case WorldView.HINDUISM: return "text-fuchsia-500";
-                    case WorldView.BUDDHISM: return "text-amber-500";
+                    case WorldView.AGNOSTICISM: return "text-zinc-500";
+                    case WorldView.CHRISTIANITY: return "text-blue-700";
+                    case WorldView.ISLAM: return "text-teal-500";
+                    case WorldView.HINDUISM: return "text-purple-600";
+                    case WorldView.BUDDHISM: return "text-amber-700";
                     case WorldView.JUDAISM: return "text-indigo-600";
+                    case WorldView.SIKHISM: return "text-rose-800";
                     default: return "text-slate-600";
                   }
                 })();
                 
                 return (
-                  <tr key={comparison.worldview} className="hover:bg-slate-50 transition-colors">
-                    <td className="py-4 px-5 border-b border-slate-100">
-                      <div className="flex items-center">
-                        <div className="mr-3">
-                          <WorldViewIcon worldview={comparison.worldview} className={worldviewColor} size={20} />
-                        </div>
-                        <span className={`font-medium ${worldviewColor}`}>
-                          {getWorldViewName(comparison.worldview)}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="py-4 px-5 border-b border-slate-100 font-serif">
-                      {comparison.summary}
-                    </td>
-                    <td className="py-4 px-5 border-b border-slate-100">
-                      <div className="flex flex-wrap gap-2">
-                        {comparison.keyConcepts.map((concept, idx) => (
-                          <span 
-                            key={idx} 
-                            className="inline-block bg-slate-100 text-slate-700 px-2 py-1 rounded-full text-xs font-medium"
-                          >
-                            {concept}
+                  <React.Fragment key={comparison.worldview}>
+                    {/* Desktop row */}
+                    <tr className="hover:bg-slate-50 transition-colors hidden md:table-row">
+                      <td className="py-4 px-5 border-b border-slate-100">
+                        <div className="flex items-center">
+                          <div className="mr-3">
+                            <WorldViewIcon worldview={comparison.worldview} className={worldviewColor} size={20} />
+                          </div>
+                          <span className={`font-medium ${worldviewColor}`}>
+                            {getWorldViewName(comparison.worldview)}
                           </span>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="py-4 px-5 border-b border-slate-100 font-medium">
-                      {comparison.afterlifeType}
-                    </td>
-                  </tr>
+                        </div>
+                      </td>
+                      <td className="py-4 px-5 border-b border-slate-100 font-serif">
+                        {comparison.summary}
+                      </td>
+                      <td className="py-4 px-5 border-b border-slate-100">
+                        <div className="flex flex-wrap gap-2">
+                          {comparison.keyConcepts.map((concept, idx) => (
+                            <span 
+                              key={idx} 
+                              className="inline-block bg-slate-100 text-slate-700 px-2 py-1 rounded-full text-xs font-medium"
+                            >
+                              {concept}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="py-4 px-5 border-b border-slate-100 font-medium">
+                        {comparison.afterlifeType}
+                      </td>
+                    </tr>
+                    
+                    {/* Mobile row - collapsed with expandable details */}
+                    <tr className="md:hidden hover:bg-slate-50 transition-colors block border-b border-slate-100">
+                      <td className="py-3 px-4 block">
+                        <details className="w-full">
+                          <summary className="flex items-center cursor-pointer focus:outline-none">
+                            <div className="mr-3">
+                              <WorldViewIcon worldview={comparison.worldview} className={worldviewColor} size={20} />
+                            </div>
+                            <span className={`font-medium ${worldviewColor}`}>
+                              {getWorldViewName(comparison.worldview)}
+                            </span>
+                          </summary>
+                          
+                          <div className="mt-3 space-y-3 pl-8">
+                            <div>
+                              <div className="text-xs font-medium text-slate-500 mb-1">Summary:</div>
+                              <div className="text-sm font-serif">{comparison.summary}</div>
+                            </div>
+                            
+                            <div>
+                              <div className="text-xs font-medium text-slate-500 mb-1">Key Concepts:</div>
+                              <div className="flex flex-wrap gap-1.5">
+                                {comparison.keyConcepts.map((concept, idx) => (
+                                  <span 
+                                    key={idx} 
+                                    className="inline-block bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full text-xs"
+                                  >
+                                    {concept}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                            
+                            <div>
+                              <div className="text-xs font-medium text-slate-500 mb-1">Afterlife Type:</div>
+                              <div className="text-sm font-medium">{comparison.afterlifeType}</div>
+                            </div>
+                          </div>
+                        </details>
+                      </td>
+                    </tr>
+                  </React.Fragment>
                 );
               })}
             </tbody>
