@@ -258,26 +258,80 @@ export default function Chat() {
               }`}
             >
               {!msg.isUser && currentSession && (
-                <div className="flex items-center mb-1">
-                  <WorldViewIcon
-                    worldview={currentSession.worldview as WorldView}
-                    size={16}
-                    className="mr-1"
-                  />
-                  <span className={`text-xs font-medium ${getWorldViewColor(currentSession.worldview)}`}>
-                    {getWorldViewName(currentSession.worldview as WorldView)}
-                  </span>
-                  
-                  {/* Model badge - only show for AI messages */}
-                  {msg.model && (
-                    <span className="ml-2 px-1.5 py-0.5 text-[10px] rounded-full bg-slate-200 text-slate-700 flex items-center">
-                      <span className="font-semibold mr-0.5">OpenAI</span>
-                      {msg.model.includes("gpt") && msg.model.replace("gpt-", "GPT-")}
-                    </span>
+                <>
+                  {/* For group chats with worldview prefixes */}
+                  {currentSession.isGroupChat && msg.content.startsWith('**') && msg.content.includes(' perspective:**') ? (
+                    <>
+                      {(() => {
+                        // Extract the worldview name from the message
+                        const parts = msg.content.split('\n');
+                        const worldviewHeader = parts[0]; // "**Christianity perspective:**"
+                        const messageContent = parts.slice(1).join('\n');
+                        const worldviewName = worldviewHeader.replace('**', '').replace(' perspective:**', '');
+                        
+                        // Find the matching worldview enum
+                        let worldviewEnum: WorldView | null = null;
+                        Object.values(WorldView).forEach(wv => {
+                          if (getWorldViewName(wv) === worldviewName) {
+                            worldviewEnum = wv;
+                          }
+                        });
+                        
+                        return (
+                          <>
+                            <div className="flex items-center mb-1">
+                              {worldviewEnum && (
+                                <>
+                                  <WorldViewIcon
+                                    worldview={worldviewEnum}
+                                    size={16}
+                                    className="mr-1"
+                                  />
+                                  <span className={`text-xs font-medium ${getWorldViewColor(worldviewEnum)}`}>
+                                    {worldviewName} Perspective
+                                  </span>
+                                </>
+                              )}
+                              
+                              {/* Model badge */}
+                              {msg.model && (
+                                <span className="ml-2 px-1.5 py-0.5 text-[10px] rounded-full bg-slate-200 text-slate-700 flex items-center">
+                                  <span className="font-semibold mr-0.5">OpenAI</span>
+                                  {msg.model.includes("gpt") && msg.model.replace("gpt-", "GPT-")}
+                                </span>
+                              )}
+                            </div>
+                            <p className="whitespace-pre-wrap">{messageContent}</p>
+                          </>
+                        );
+                      })()}
+                    </>
+                  ) : (
+                    <>
+                      {/* Regular single worldview chat */}
+                      <div className="flex items-center mb-1">
+                        <WorldViewIcon
+                          worldview={currentSession.worldview as WorldView}
+                          size={16}
+                          className="mr-1"
+                        />
+                        <span className={`text-xs font-medium ${getWorldViewColor(currentSession.worldview)}`}>
+                          {getWorldViewName(currentSession.worldview as WorldView)}
+                        </span>
+                        
+                        {/* Model badge - only show for AI messages */}
+                        {msg.model && (
+                          <span className="ml-2 px-1.5 py-0.5 text-[10px] rounded-full bg-slate-200 text-slate-700 flex items-center">
+                            <span className="font-semibold mr-0.5">OpenAI</span>
+                            {msg.model.includes("gpt") && msg.model.replace("gpt-", "GPT-")}
+                          </span>
+                        )}
+                      </div>
+                      <p className="whitespace-pre-wrap">{msg.content}</p>
+                    </>
                   )}
-                </div>
+                </>
               )}
-              <p className="whitespace-pre-wrap">{msg.content}</p>
               <p className="text-xs text-gray-500 mt-1">
                 {new Date(msg.createdAt).toLocaleTimeString()}
               </p>

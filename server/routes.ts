@@ -232,10 +232,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create a new chat session
   app.post("/api/chat/sessions", async (req, res) => {
     try {
-      const { worldview, title } = req.body;
+      const { worldview, worldviews, isGroupChat, title } = req.body;
       
-      // Validate the session data
-      const sessionData = { worldview, title };
+      // Prepare the session data with support for group chats
+      const sessionData = { 
+        worldview, 
+        worldviews: Array.isArray(worldviews) ? worldviews : [worldview],
+        isGroupChat: isGroupChat === true,
+        title 
+      };
       
       try {
         insertChatSessionSchema.parse(sessionData);
@@ -337,13 +342,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create the user message
       const userMessage = await storage.createChatMessage(validatedData);
       
-      // Process with the appropriate worldview agent
+      // Process with the appropriate worldview agent(s)
       try {
-        const worldviewEnum = session.worldview as WorldView;
-        const chatAgent = ChatAgentFactory.getAgent(worldviewEnum);
-        
         // Get the model info from request
         const requestedModel = req.body.model || AIModel.GPT_4_O;
+        
+        // Check if this is a group chat with multiple worldviews
+        if (session.isGroupChat && Array.isArray(session.worldviews) && session.worldviews.length > 0) {
+          // Process messages from each worldview in the group chat
+          let aiMessage = null;
+          
+          // Process each worldview in sequence
+          for (const worldview of session.worldviews) {
+            try {
+              const worldviewEnum = worldview as WorldView;
+              const chatAgent = ChatAgentFactory.getAgent(worldviewEnum);
+              
+              // Process the message using the chat agent
+              const response = await chatAgent.processMessage(
+                userMessage.content,
+                requestedModel
+              );
+              
+              // Create an AI message prefixed with the worldview name
+              // Import the function from world-view-icons if needed
+              let viewName = worldviewEnum;
+              // Simple mapping for worldview names if needed
+              if (worldviewEnum === WorldView.CHRISTIANITY) viewName = "Christianity";
+              if (worldviewEnum === WorldView.ISLAM) viewName = "Islam";
+              if (worldviewEnum === WorldView.BUDDHISM) viewName = "Buddhism";
+              if (worldviewEnum === WorldView.HINDUISM) viewName = "Hinduism";
+              if (worldviewEnum === WorldView.JUDAISM) viewName = "Judaism";
+              if (worldviewEnum === WorldView.SIKHISM) viewName = "Sikhism";
+              if (worldviewEnum === WorldView.ATHEISM) viewName = "Atheism";
+              if (worldviewEnum === WorldView.AGNOSTICISM) viewName = "Agnosticism";
+              
+              const content = `**${viewName} perspective:**\n${response.content}`;
+              
+              // Save the AI response
+              aiMessage = await storage.createChatMessage({
+                sessionId: sessionId,
+                content,
+                isUser: false,
+                model: response.actualModel,
+                provider: response.actualProvider
+              });
+              
+              console.log(`Group chat: ${viewName} response processed with ${response.actualProvider} model ${response.actualModel}`);
+            } catch (worldviewError) {
+              console.error(`Error processing ${worldview} in group chat:`, worldviewError);
+            }
+          }
+          
+          // If no AI messages were created, throw an error
+          if (!aiMessage) {
+            throw new Error("Failed to process message with any worldview in the group chat");
+          }
+          
+          // Return the last AI message (we'll improve this later to combine multiple responses)
+          res.status(201).json({
+            userMessage,
+            aiMessage
+          });
+          return;
+        }
+        
+        // Regular single worldview chat
+        const worldviewEnum = session.worldview as WorldView;
+        const chatAgent = ChatAgentFactory.getAgent(worldviewEnum);
         
         // Process the message using the chat agent
         const response = await chatAgent.processMessage(
