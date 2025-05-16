@@ -235,7 +235,7 @@ const nodes = {
       console.log("Metrics:", metrics);
       
       // Extract scores with careful handling of object structure
-      let scores = {};
+      let scores: Record<string, number[]> = {};
       
       // Handle different possible formats of scores in the response
       if (chartJson.scores) {
@@ -247,7 +247,7 @@ const nodes = {
       console.log("Original scores:", JSON.stringify(scores, null, 2));
       
       // For safety, ensure every worldview has corresponding scores
-      const safeScores = { ...scores };
+      const safeScores: Record<string, number[]> = { ...scores };
       for (const worldview of labels) {
         const wv = worldview.toString();
         
@@ -259,7 +259,7 @@ const nodes = {
         }
         
         // Ensure array is complete for all metrics
-        if (safeScores[wv].length < metrics.length) {
+        if (safeScores[wv] && safeScores[wv].length < metrics.length) {
           const missingCount = metrics.length - safeScores[wv].length;
           safeScores[wv] = [...safeScores[wv], ...Array(missingCount).fill(50)];
         }
