@@ -124,8 +124,8 @@ export default function Home() {
   return (
     <div className="bg-clean min-h-screen pb-8">
       <main className="container mx-auto px-4 py-6 flex-grow">
-        <h1 className="text-4xl font-bold text-center mb-4 bg-gradient-to-r from-teal-600 to-blue-500 text-transparent bg-clip-text">Religious Gurus</h1>
-        <p className="text-center text-lg mb-8 max-w-2xl mx-auto text-slate-700">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-4 bg-gradient-to-r from-teal-600 to-blue-500 text-transparent bg-clip-text px-2">Religious Gurus</h1>
+        <p className="text-center text-lg mb-6 sm:mb-8 max-w-2xl mx-auto text-slate-700 px-4">
           Explore how different worldviews interpret life's big questions
         </p>
         

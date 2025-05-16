@@ -37,22 +37,22 @@ export default function ModelSelector({
   disabled = false
 }: ModelSelectorProps) {
   return (
-    <div className="flex flex-col space-y-1">
-      <label className="text-sm font-medium">Model</label>
+    <div className="flex flex-col space-y-2">
+      <label className="text-sm font-medium text-slate-700">Model</label>
       <Select
         value={selectedModel}
         onValueChange={(value) => onChange(value, "openai")}
         disabled={disabled}
       >
-        <SelectTrigger className="w-full">
+        <SelectTrigger className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg">
           <SelectValue placeholder="Select a model" />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="max-w-[350px]">
           {MODELS.map((model) => (
             <SelectItem key={model.id} value={model.id}>
-              <div className="flex flex-col">
-                <span>{model.name}</span>
-                <span className="text-xs text-muted-foreground">{model.description}</span>
+              <div className="flex flex-col py-1">
+                <span className="font-medium">{model.name}</span>
+                <span className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{model.description}</span>
               </div>
             </SelectItem>
           ))}
