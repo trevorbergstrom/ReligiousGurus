@@ -139,7 +139,7 @@ export default function About() {
                   
                   <h3 className="font-semibold text-lg mb-3 text-slate-800">2. AI Agents Process Your Query</h3>
                   <p className="text-slate-600 mb-4">
-                    Seven expert AI agents, each representing a different worldview, analyze your topic and generate responses from their respective perspectives.
+                    Eight expert AI agents, each representing a different worldview, analyze your topic and generate responses from their respective perspectives.
                   </p>
                   
                   <h3 className="font-semibold text-lg mb-3 text-slate-800">3. Results Are Synthesized</h3>
