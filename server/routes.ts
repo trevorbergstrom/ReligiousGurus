@@ -66,7 +66,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Return the combined data
       res.status(201).json({ 
         topic,
-        response
+        response,
+        processDetails: processedResponse.processDetails // Include the processing details
       });
     } catch (error) {
       if (error instanceof z.ZodError) {

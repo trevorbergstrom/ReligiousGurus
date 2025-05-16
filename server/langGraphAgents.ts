@@ -395,39 +395,127 @@ const nodes = {
 const worldviewGraph = null;
 
 // Create a coordinator agent class that executes the nodes sequentially
+// with detailed process logging
 export class LangGraphCoordinator {
+  // Track process details for transparency
+  private processDetails: {
+    topic?: string;
+    expertPrompts?: Record<string, string>;
+    expertResponses?: Record<string, string>;
+    summaryPrompt?: string;
+    chartDataPrompt?: string;
+    comparisonsPrompt?: string;
+    processingTimeMs?: Record<string, number>;
+  };
+  
   constructor() {
-    // No initialization needed
+    this.processDetails = {};
+  }
+  
+  // Get the detailed process information
+  getProcessDetails() {
+    return this.processDetails;
+  }
+  
+  // Reset process details for a new request
+  private resetProcessDetails() {
+    this.processDetails = {
+      expertPrompts: {},
+      expertResponses: {},
+      processingTimeMs: {},
+    };
+  }
+  
+  // Format prompt for logging
+  private formatPrompt(systemPrompt: string, userPrompt: string): string {
+    return `SYSTEM: ${systemPrompt}\n\nUSER: ${userPrompt}`;
   }
   
   async processTopic(topic: string): Promise<{
     summary: string;
     chartData: ChartData;
     comparisons: WorldViewComparison[];
+    processDetails?: any; // Optional processing details
   }> {
     try {
+      // Reset and initialize the process details
+      this.resetProcessDetails();
+      this.processDetails.topic = topic;
+      
       // Initialize the state
       let state: AgentState = {
         topic,
         expertResponses: {},
       };
       
-      // Execute the nodes sequentially
+      // Execute the nodes sequentially with detailed logging
       console.log("Processing topic:", topic);
+      console.log("=== RELIGIOUS GURUS PROCESS INITIATED ===");
       
       // Step 1: Collect expert responses
+      console.log("STEP 1: Collecting expert responses from all worldviews");
+      const expertStartTime = Date.now();
+      
+      // Store the expert prompts for transparency
+      Object.values(WorldView).forEach(worldview => {
+        const systemPrompt = `You are an expert in ${worldview}. Provide a neutral, educational response about the given topic from the perspective of ${worldview}. Use 1-2 concise sentences.`;
+        const userPrompt = `Given the topic "${topic}", describe the ${worldview} worldview's stance in 1-2 sentences, using neutral and educational language. Avoid bias or judgment.`;
+        this.processDetails.expertPrompts![worldview.toString()] = this.formatPrompt(systemPrompt, userPrompt);
+      });
+      
       state = await nodes.collectExpertResponses(state);
       
+      // Log expert responses
+      console.log("Expert responses received:");
+      Object.entries(state.expertResponses).forEach(([worldview, response]) => {
+        console.log(`- ${worldview}: "${response}"`);
+        this.processDetails.expertResponses![worldview] = response;
+      });
+      this.processDetails.processingTimeMs!["expertResponses"] = Date.now() - expertStartTime;
+      
       // Step 2: Generate summary
+      console.log("\nSTEP 2: Generating comparative summary");
+      const summaryStartTime = Date.now();
+      
+      // Store the summary prompt
+      const expertResponsesText = formatExpertResponses(state.expertResponses);
+      const summarySystemPrompt = "You are a neutral comparative religion expert. Synthesize the provided worldview responses into a coherent summary paragraph that highlights similarities and differences without bias.";
+      const summaryUserPrompt = `Topic: "${topic}"\n\nWorldview responses:\n${expertResponsesText}\n\nCreate a neutral summary paragraph highlighting the similarities and differences between these worldviews on this topic.`;
+      this.processDetails.summaryPrompt = this.formatPrompt(summarySystemPrompt, summaryUserPrompt);
+      
       state = await nodes.generateSummary(state);
+      console.log("Summary generated:", state.summary?.substring(0, 100) + "...");
+      this.processDetails.processingTimeMs!["summary"] = Date.now() - summaryStartTime;
       
       // Step 3: Generate chart data
+      console.log("\nSTEP 3: Generating comparative visualization data");
+      const chartStartTime = Date.now();
+      
+      // Store the chart data prompt
+      const chartSystemPrompt = "You are a comparative religion scholar analyzing theological overlap between different religions and worldviews.";
+      const chartUserPrompt = `Topic: "${topic}"\n\nWorldview responses:\n${expertResponsesText}\n\nIdentify exactly 4 fundamental religious concepts that are either shared or contested across these worldviews (such as monotheism, scripture-based authority, soul/afterlife, moral absolutes, etc.). For each concept, score each worldview from 0 to 100 based on how central or important this concept is to that religion or worldview.\n\nReturn valid JSON data containing metrics (array of concept names) and scores (object mapping each worldview to an array of scores).`;
+      this.processDetails.chartDataPrompt = this.formatPrompt(chartSystemPrompt, chartUserPrompt);
+      
       state = await nodes.generateChartData(state);
+      console.log("Chart data generated with metrics:", state.chartData?.datasets.map(d => d.label).join(", "));
+      this.processDetails.processingTimeMs!["chartData"] = Date.now() - chartStartTime;
       
       // Step 4: Generate comparisons
-      state = await nodes.generateComparisons(state);
+      console.log("\nSTEP 4: Generating detailed worldview comparisons");
+      const comparisonsStartTime = Date.now();
       
-      // Return the final result
+      // Store the comparisons prompt
+      const comparisonSystemPrompt = "You are a comparative religion expert. Generate structured comparison data for each worldview.";
+      const comparisonUserPrompt = `Topic: "${topic}"\n\nWorldview responses:\n${expertResponsesText}\n\nGenerate a JSON object with data for each worldview. For each worldview, create an entry with summary (1-2 sentences), keyConcepts (array of 2-3 key terms), and afterlifeType (single term). Return valid JSON.`;
+      this.processDetails.comparisonsPrompt = this.formatPrompt(comparisonSystemPrompt, comparisonUserPrompt);
+      
+      state = await nodes.generateComparisons(state);
+      console.log("Detailed comparisons generated for worldviews:", Object.values(WorldView).join(", "));
+      this.processDetails.processingTimeMs!["comparisons"] = Date.now() - comparisonsStartTime;
+      
+      console.log("=== RELIGIOUS GURUS PROCESS COMPLETED ===");
+      
+      // Return the final result with process details
       return {
         summary: state.summary || "Unable to generate summary.",
         chartData: state.chartData || {
@@ -445,7 +533,8 @@ export class LangGraphCoordinator {
           summary: "No data available.",
           keyConcepts: ["No data available"],
           afterlifeType: "Unknown"
-        }))
+        })),
+        processDetails: this.processDetails // Include the detailed process information
       };
     } catch (error) {
       console.error("Error in LangGraph coordinator agent:", error);
