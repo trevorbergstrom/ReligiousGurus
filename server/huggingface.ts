@@ -8,10 +8,10 @@ const hf = new HfInference(process.env.HUGGINGFACE_API_KEY);
 
 // Supported models - using publicly available models on Hugging Face
 export enum HuggingFaceModels {
-  GEMMA_7B = "google/gemma-7b-it",
-  ZEPHYR = "HuggingFaceH4/zephyr-7b-beta",
-  FLAN_T5 = "google/flan-t5-xxl",
-  BLOOM = "bigscience/bloom"
+  GEMMA_3_1B = "google/gemma-3-1b-it",
+  LLAMA_3_1B = "meta-llama/Llama-3.2-1B-Instruct",
+  QWEN_7B = "Qwen/Qwen2.5-7B-Instruct",
+  GPT2 = "openai-community/gpt2"
 }
 
 export interface ModelConfig {
