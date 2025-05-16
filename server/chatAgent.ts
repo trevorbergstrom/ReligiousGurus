@@ -45,32 +45,70 @@ export class WorldviewChatAgent {
     provider?: string
   ): Promise<string> {
     try {
-      // We'll process the message directly with model selection
-      if (model && provider) {
-        // For this case, we'll use a fresh agent with the requested model
-        const freshChatAgent = createChatAgent(this.worldview, model, provider);
-        return await freshChatAgent.invoke({
+      // Handle different models based on provider
+      if (model && provider === 'huggingface') {
+        // Create a system prompt for Hugging Face
+        const systemPrompt = `You are an educational expert on ${this.worldview}. 
+          Always provide factual, balanced, and educational responses about ${this.worldview}.
+          
+          Context information about this conversation:
+          ${this.context}
+          
+          Respond conversationally while staying true to ${this.worldview} perspectives.
+          Keep responses concise (1-3 paragraphs) and avoid unnecessarily formal academic language.`;
+          
+        // Use Hugging Face directly
+        return await generateTextWithHuggingFace(
+          model as HuggingFaceModels,
+          userMessage,
+          systemPrompt
+        );
+      } 
+      else if (model && provider === 'openai') {
+        // Use OpenAI with specific model
+        const chatModel = new ChatOpenAI({
+          modelName: model,
+          temperature: 0.7,
+        });
+        
+        const chatPrompt = ChatPromptTemplate.fromMessages([
+          ["system", `You are an educational expert on ${this.worldview}.
+            Always provide factual, balanced, and educational responses about ${this.worldview}.
+            
+            Context information about this conversation:
+            ${this.context}
+            
+            Respond conversationally while staying true to ${this.worldview} perspectives.`],
+          ["user", userMessage],
+        ]);
+        
+        const result = await chatModel.invoke(chatPrompt.format({
+          context: this.context,
+          history: "",
+          userMessage: userMessage
+        }));
+        
+        return result.content as string;
+      }
+      else {
+        // Use default OpenAI model
+        const result = await this.chat.invoke({
           context: this.context,
           history: "",
           userMessage
         });
-      }
         
-      // Use the default chat agent
-      return await this.chat.invoke({
-        context: this.context,
-        history: "", // Can be expanded to include conversation history
-        userMessage
-      });
+        return result;
+      }
     } catch (error) {
       console.error(`Error in ${this.worldview} chat agent:`, error);
-      return `I apologize, but I'm having trouble processing your request about ${this.worldview}. Could you try asking in a different way?`;
+      return `I apologize, but I'm having trouble processing your request about ${this.worldview} with the selected model. Could you try a different model or try again later?`;
     }
   }
 }
 
-// Create a chat agent for a specific worldview with optional model specification
-function createChatAgent(worldview: WorldView, modelId?: string, provider?: string) {
+// Create a chat agent for a specific worldview
+function createChatAgent(worldview: WorldView) {
   // Configure worldview-specific instructions
   let worldviewSpecificInstructions = "";
   
@@ -113,52 +151,10 @@ Conversation history:
 Respond conversationally while staying true to ${worldview} perspectives. Keep responses concise (1-3 paragraphs) and avoid unnecessarily formal academic language.`],
     ["user", "{userMessage}"],
   ]);
-
-  // Select the model based on provider
-  let chatModel = model; // default to the predefined model
-  
-  // If specific model requested and available, use it
-  // For Hugging Face models, we need to handle them differently
-  // since they aren't directly compatible with LangChain's structure
-  if (modelId && provider) {
-    if (provider === 'openai') {
-      chatModel = new ChatOpenAI({
-        modelName: modelId,
-        temperature: 0.7,
-      });
-    } else if (provider === 'huggingface') {
-      // Instead of returning a RunnableSequence, we'll create a custom function
-      // that will use our Hugging Face integration directly
-      return async ({ context, history, userMessage }: any) => {
-        try {
-          const systemPrompt = `You are an educational expert on ${worldview}. ${worldviewSpecificInstructions}
-            Always provide factual, balanced, and educational responses about ${worldview}.
-            
-            Context information about this conversation:
-            ${context}
-            
-            ${history ? `Conversation history: ${history}` : ''}
-            
-            Respond conversationally while staying true to ${worldview} perspectives.
-            Keep responses concise (1-3 paragraphs) and avoid unnecessarily formal academic language.`;
-            
-          // Use our Hugging Face integration
-          return await generateTextWithHuggingFace(
-            modelId as HuggingFaceModels,
-            userMessage,
-            systemPrompt
-          );
-        } catch (error) {
-          console.error(`Error using Hugging Face model for ${worldview}:`, error);
-          return `I apologize, but I'm having trouble processing your request about ${worldview} with the selected model. Could you try a different model or try again later?`;
-        }
-      };
-    }
-  }
   
   return RunnableSequence.from([
     chatPrompt,
-    chatModel,
+    model,
     new StringOutputParser(),
   ]);
 }
