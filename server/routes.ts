@@ -20,96 +20,148 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // API routes
   
-  // Get all topics or search topics
+  // Topic related routes
   app.get("/api/topics", async (req, res) => {
     try {
-      const query = req.query.q as string | undefined;
+      const query = req.query.q as string;
+      const topics = query 
+        ? await storage.searchTopics(query)
+        : await storage.getAllTopics();
       
-      if (query) {
-        // Search topics by query
-        const topics = await storage.searchTopics(query);
-        res.json(topics);
-      } else {
-        // Get all topics
-        const topics = await storage.getAllTopics();
-        res.json(topics);
-      }
+      res.json(topics);
     } catch (error) {
       console.error("Error fetching topics:", error);
       res.status(500).json({ message: "Failed to fetch topics" });
     }
   });
-
-  // Submit a new topic
+  
   app.post("/api/topics", async (req, res) => {
     try {
-      // Validate request body
-      const validatedData = insertTopicSchema.parse(req.body);
+      const { content, model, provider } = req.body;
       
-      // Check if the topic is not empty
-      if (!validatedData.content.trim()) {
-        return res.status(400).json({ message: "Topic cannot be empty" });
+      // Validate the topic data
+      const topicData = { content };
+      
+      try {
+        insertTopicSchema.parse(topicData);
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          return res.status(400).json({ message: "Invalid topic data", errors: error.errors });
+        }
+        throw error;
       }
-
-      // Create the topic
-      const topic = await storage.createTopic(validatedData);
       
-      // Process the topic with the LangGraph coordinator agent using the selected model
-      const processedResponse = await langGraphCoordinator.processTopic(
-        topic.content,
-        topic.model,
-        topic.provider
-      );
-      
-      // Store the response
-      const response = await storage.createResponse({
-        topicId: topic.id,
-        summary: processedResponse.summary,
-        chartData: processedResponse.chartData,
-        comparisons: processedResponse.comparisons
+      // Create the topic record
+      const topic = await storage.createTopic({
+        ...topicData, 
+        model: model || AIModel.LLAMA_3_1B,
+        provider: provider || ModelProvider.HUGGINGFACE
       });
       
-      // Return the combined data
-      res.status(201).json({ 
-        topic,
-        response,
-        processDetails: processedResponse.processDetails // Include the processing details
-      });
+      // Process the topic with the coordinator (similar to GPT function calling)
+      try {
+        const result = await langGraphCoordinator.processTopic(
+          topic.content, 
+          model,
+          provider
+        );
+        
+        // Store the generated response
+        const response = await storage.createResponse({
+          topicId: topic.id,
+          summary: result.summary,
+          chartData: result.chartData,
+          comparisons: result.comparisons
+        });
+        
+        // Return the topic with its response
+        res.status(201).json({
+          topic,
+          response
+        });
+      } catch (error) {
+        console.error("Error processing topic:", error);
+        
+        // Even if process fails, we still return the created topic
+        res.status(201).json({
+          topic,
+          response: null,
+          error: "Failed to process topic"
+        });
+      }
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid topic data", errors: error.errors });
-      }
-      
-      console.error("Error processing topic:", error);
-      res.status(500).json({ message: "Failed to process topic" });
+      console.error("Error creating topic:", error);
+      res.status(500).json({ message: "Failed to create topic" });
     }
   });
-
-  // Get the response for a specific topic
-  app.get("/api/topics/:topicId/response", async (req, res) => {
+  
+  app.get("/api/topics/:id", async (req, res) => {
     try {
-      const topicId = parseInt(req.params.topicId);
+      const topicId = parseInt(req.params.id);
       
       if (isNaN(topicId)) {
         return res.status(400).json({ message: "Invalid topic ID" });
       }
       
-      // Get the topic
       const topic = await storage.getTopic(topicId);
       
       if (!topic) {
         return res.status(404).json({ message: "Topic not found" });
       }
       
-      // Get the response
+      res.json(topic);
+    } catch (error) {
+      console.error("Error fetching topic:", error);
+      res.status(500).json({ message: "Failed to fetch topic" });
+    }
+  });
+  
+  app.delete("/api/topics/:id", async (req, res) => {
+    try {
+      const topicId = parseInt(req.params.id);
+      
+      if (isNaN(topicId)) {
+        return res.status(400).json({ message: "Invalid topic ID" });
+      }
+      
+      const topic = await storage.getTopic(topicId);
+      
+      if (!topic) {
+        return res.status(404).json({ message: "Topic not found" });
+      }
+      
+      // Delete associated response first
+      await storage.deleteResponse(topicId);
+      
+      // Then delete the topic
+      await storage.deleteTopic(topicId);
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting topic:", error);
+      res.status(500).json({ message: "Failed to delete topic" });
+    }
+  });
+  
+  app.get("/api/topics/:id/response", async (req, res) => {
+    try {
+      const topicId = parseInt(req.params.id);
+      
+      if (isNaN(topicId)) {
+        return res.status(400).json({ message: "Invalid topic ID" });
+      }
+      
+      const topic = await storage.getTopic(topicId);
+      
+      if (!topic) {
+        return res.status(404).json({ message: "Topic not found" });
+      }
+      
       const response = await storage.getResponseByTopicId(topicId);
       
       if (!response) {
-        return res.status(404).json({ message: "Response not found" });
+        return res.status(404).json({ message: "Response not found for this topic" });
       }
-      
-      // Check if detailed process info was requested
-      const includeDetails = req.query.details === 'true';
       
       res.json({
         topic,
@@ -118,31 +170,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching response:", error);
       res.status(500).json({ message: "Failed to fetch response" });
-    }
-  });
-  
-  // Delete a topic
-  app.delete("/api/topics/:topicId", async (req, res) => {
-    try {
-      const topicId = parseInt(req.params.topicId);
-      
-      if (isNaN(topicId)) {
-        return res.status(400).json({ message: "Invalid topic ID" });
-      }
-      
-      // Check if the topic exists
-      const topic = await storage.getTopic(topicId);
-      if (!topic) {
-        return res.status(404).json({ message: "Topic not found" });
-      }
-      
-      // Delete the topic (this will also delete the associated response)
-      await storage.deleteTopic(topicId);
-      
-      res.status(204).end();
-    } catch (error) {
-      console.error("Error deleting topic:", error);
-      res.status(500).json({ message: "Failed to delete topic" });
     }
   });
 
@@ -175,8 +202,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             "2. A summary was generated highlighting key similarities and differences",
             "3. Chart data was created to visualize concept importance across worldviews",
             "4. Detailed comparisons were generated for each worldview"
-          ],
-          note: "This transparency feature helps you understand how AI generated this comparative analysis"
+          ]
         }
       });
     } catch (error) {
@@ -185,15 +211,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // CHAT ROUTES
+  // Chat related routes
+  
   // Get all chat sessions
   app.get("/api/chat/sessions", async (req, res) => {
     try {
       const worldview = req.query.worldview as string;
-      const sessions = worldview
+      
+      const sessions = worldview 
         ? await storage.getChatSessionsByWorldview(worldview)
         : await storage.getAllChatSessions();
-        
+      
       res.json(sessions);
     } catch (error) {
       console.error("Error fetching chat sessions:", error);
@@ -201,12 +229,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Create a new chat session
+  app.post("/api/chat/sessions", async (req, res) => {
+    try {
+      const { worldview, title } = req.body;
+      
+      // Validate the session data
+      const sessionData = { worldview, title };
+      
+      try {
+        insertChatSessionSchema.parse(sessionData);
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          return res.status(400).json({ message: "Invalid session data", errors: error.errors });
+        }
+        throw error;
+      }
+      
+      // Create the session
+      const session = await storage.createChatSession(sessionData);
+      
+      res.status(201).json(session);
+    } catch (error) {
+      console.error("Error creating chat session:", error);
+      res.status(500).json({ message: "Failed to create chat session" });
+    }
+  });
+  
   // Get a specific chat session
   app.get("/api/chat/sessions/:id", async (req, res) => {
     try {
-      const id = req.params.id;
+      const sessionId = req.params.id;
       
-      const session = await storage.getChatSession(id);
+      const session = await storage.getChatSession(sessionId);
       if (!session) {
         return res.status(404).json({ message: "Chat session not found" });
       }
@@ -218,48 +273,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Create a new chat session
-  app.post("/api/chat/sessions", async (req, res) => {
-    try {
-      // Validate the request body
-      const validatedData = insertChatSessionSchema.parse(req.body);
-      
-      // Create the chat session
-      const session = await storage.createChatSession(validatedData);
-      
-      res.status(201).json(session);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid chat session data", errors: error.errors });
-      }
-      
-      console.error("Error creating chat session:", error);
-      res.status(500).json({ message: "Failed to create chat session" });
-    }
-  });
-  
   // Delete a chat session
   app.delete("/api/chat/sessions/:id", async (req, res) => {
     try {
-      const id = req.params.id;
+      const sessionId = req.params.id;
       
-      // Check if the session exists
-      const session = await storage.getChatSession(id);
+      const session = await storage.getChatSession(sessionId);
       if (!session) {
         return res.status(404).json({ message: "Chat session not found" });
       }
       
-      // Delete the session (this will also delete all associated messages)
-      await storage.deleteChatSession(id);
+      // Delete associated messages first
+      await storage.deleteChatMessagesBySessionId(sessionId);
       
-      res.status(204).end();
+      // Then delete the session
+      await storage.deleteChatSession(sessionId);
+      
+      res.status(204).send();
     } catch (error) {
       console.error("Error deleting chat session:", error);
       res.status(500).json({ message: "Failed to delete chat session" });
     }
   });
   
-  // Get all messages for a chat session
+  // Get messages for a chat session
   app.get("/api/chat/sessions/:sessionId/messages", async (req, res) => {
     try {
       const sessionId = req.params.sessionId;
@@ -338,14 +375,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           provider: actualProvider
         });
         
-        
         // Return both messages
         res.status(201).json({
           userMessage,
           aiMessage
         });
-      } catch (error) {
-        console.error("Error processing chat message:", error);
+      } catch (processingError) {
+        console.error("Error processing chat message:", processingError);
         
         // Even if the AI response fails, we still return the user message
         res.status(201).json({
