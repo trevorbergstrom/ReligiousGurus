@@ -73,40 +73,131 @@ const createExpertAgent = (worldview: WorldView) => {
     ["user", `Given the topic "{topic}", describe the ${worldview} worldview's stance in 1-2 sentences, using neutral and educational language. Avoid bias or judgment.`],
   ]);
 
-  return RunnableSequence.from([
-    expertPrompt,
-    model,
-    new StringOutputParser(),
-  ]);
+  return (state: AgentState) => {
+    if (state.provider === ModelProvider.HUGGINGFACE) {
+      // For Hugging Face models, use direct API call
+      return RunnableSequence.from([
+        async (input: { topic: string }) => {
+          const systemPrompt = `You are an expert in ${worldview}. Provide a neutral, educational response about the given topic from the perspective of ${worldview}. Use 1-2 concise sentences.`;
+          const userPrompt = `Given the topic "${input.topic}", describe the ${worldview} worldview's stance in 1-2 sentences, using neutral and educational language. Avoid bias or judgment.`;
+          
+          try {
+            const response = await generateTextWithHuggingFace(
+              state.model as HuggingFaceModels,
+              userPrompt,
+              systemPrompt
+            );
+            return response;
+          } catch (error) {
+            console.error(`Error with Hugging Face model for ${worldview}:`, error);
+            return `Error: Failed to get response from ${worldview} perspective using Hugging Face.`;
+          }
+        },
+      ]);
+    } else {
+      // For OpenAI, use LangChain
+      const customModel = new ChatOpenAI({
+        modelName: state.model,
+        temperature: 0,
+      });
+      
+      return RunnableSequence.from([
+        expertPrompt,
+        customModel,
+        new StringOutputParser(),
+      ]);
+    }
+  };
 };
 
-// Create a summary generator
-const summaryGenerator = (() => {
+// Create a summary generator that uses the selected model
+const createSummaryGenerator = (state: AgentState) => {
   const summaryPrompt = ChatPromptTemplate.fromMessages([
     ["system", "You are a neutral comparative religion expert. Synthesize the provided worldview responses into a coherent summary paragraph that highlights similarities and differences without bias."],
     ["user", `Topic: "{topic}"\n\nWorldview responses:\n{expertResponsesText}\n\nCreate a neutral summary paragraph highlighting the similarities and differences between these worldviews on this topic.`],
   ]);
 
-  return RunnableSequence.from([
-    summaryPrompt,
-    model,
-    new StringOutputParser(),
-  ]);
-})();
+  if (state.provider === ModelProvider.HUGGINGFACE) {
+    // For Hugging Face models
+    return RunnableSequence.from([
+      async (input: { topic: string, expertResponsesText: string }) => {
+        const systemPrompt = "You are a neutral comparative religion expert. Synthesize the provided worldview responses into a coherent summary paragraph that highlights similarities and differences without bias.";
+        const userPrompt = `Topic: "${input.topic}"\n\nWorldview responses:\n${input.expertResponsesText}\n\nCreate a neutral summary paragraph highlighting the similarities and differences between these worldviews on this topic.`;
+        
+        try {
+          const response = await generateTextWithHuggingFace(
+            state.model as HuggingFaceModels,
+            userPrompt,
+            systemPrompt
+          );
+          return response;
+        } catch (error) {
+          console.error("Error generating summary with Hugging Face:", error);
+          return "Error: Failed to generate a comparative summary using Hugging Face.";
+        }
+      },
+    ]);
+  } else {
+    // For OpenAI
+    const customModel = new ChatOpenAI({
+      modelName: state.model,
+      temperature: 0,
+    });
+    
+    return RunnableSequence.from([
+      summaryPrompt,
+      customModel,
+      new StringOutputParser(),
+    ]);
+  }
+};
 
-// Create a chart data generator
-const chartDataGenerator = (() => {
+// Create a chart data generator that uses the selected model
+const createChartDataGenerator = (state: AgentState) => {
   const chartPrompt = ChatPromptTemplate.fromMessages([
     ["system", "You are a comparative religion scholar analyzing theological overlap between different religions and worldviews."],
     ["user", `Topic: "{topic}"\n\nWorldview responses:\n{expertResponsesText}\n\nIdentify exactly 4 fundamental religious concepts that are either shared or contested across these worldviews (such as monotheism, scripture-based authority, soul/afterlife, moral absolutes, etc.). For each concept, score each worldview from 0 to 100 based on how central or important this concept is to that religion or worldview.\n\nReturn valid JSON data containing metrics (array of concept names) and scores (object mapping each worldview to an array of scores).`],
   ]);
 
-  return RunnableSequence.from([
-    chartPrompt,
-    model.bind({ response_format: { type: "json_object" } }),
-    new JsonOutputParser(),
-  ]);
-})();
+  if (state.provider === ModelProvider.HUGGINGFACE) {
+    // For Hugging Face models
+    return async (input: { topic: string, expertResponsesText: string }) => {
+      const systemPrompt = "You are a comparative religion scholar analyzing theological overlap between different religions and worldviews.";
+      const userPrompt = `Topic: "${input.topic}"\n\nWorldview responses:\n${input.expertResponsesText}\n\nIdentify exactly 4 fundamental religious concepts that are either shared or contested across these worldviews (such as monotheism, scripture-based authority, soul/afterlife, moral absolutes, etc.). For each concept, score each worldview from 0 to 100 based on how central or important this concept is to that religion or worldview.\n\nReturn valid JSON data containing metrics (array of concept names) and scores (object mapping each worldview to an array of scores).`;
+      
+      try {
+        const response = await generateTextWithHuggingFace(
+          state.model as HuggingFaceModels,
+          userPrompt,
+          systemPrompt
+        );
+        
+        // Attempt to parse the JSON response
+        try {
+          return JSON.parse(response);
+        } catch (parseError) {
+          console.error("Error parsing Hugging Face JSON response:", parseError);
+          return { metrics: ["error"], scores: {} };
+        }
+      } catch (error) {
+        console.error("Error generating chart data with Hugging Face:", error);
+        return { metrics: ["error"], scores: {} };
+      }
+    };
+  } else {
+    // For OpenAI
+    const customModel = new ChatOpenAI({
+      modelName: state.model,
+      temperature: 0,
+    });
+    
+    return RunnableSequence.from([
+      chartPrompt,
+      customModel.bind({ response_format: { type: "json_object" } }),
+      new JsonOutputParser(),
+    ]);
+  }
+};
 
 // Create a comparisons generator
 const comparisonsGenerator = (() => {

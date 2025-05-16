@@ -100,7 +100,11 @@ export default function Home() {
   const handleTopicSubmit = (content: string, model: string, provider: string) => {
     // Clear any search when submitting a new topic
     setSearchQuery(undefined);
-    submitNewTopic({ content, model, provider });
+    submitNewTopic({ 
+      content, 
+      model, 
+      provider 
+    });
   };
   
   const handleSelectTopic = (topicId: number) => {
