@@ -12,10 +12,10 @@ interface ModelInfo {
 
 const MODELS: ModelInfo[] = [
   {
-    id: AIModel.GPT_4_O,
-    name: "GPT-4o",
-    description: "Most capable OpenAI model",
-    provider: ModelProvider.OPENAI
+    id: AIModel.LLAMA_3_1B, // Listed first to be default
+    name: "Llama 3.2 (1B)",
+    description: "Meta's latest compact instruction model",
+    provider: ModelProvider.HUGGINGFACE
   },
   {
     id: AIModel.GEMMA_3_1B,
@@ -24,16 +24,34 @@ const MODELS: ModelInfo[] = [
     provider: ModelProvider.HUGGINGFACE
   },
   {
-    id: AIModel.LLAMA_3_1B,
-    name: "Llama 3.2 (1B)",
-    description: "Meta's compact instruction model",
-    provider: ModelProvider.HUGGINGFACE
-  },
-  {
     id: AIModel.QWEN_7B,
     name: "Qwen 2.5 (7B)",
     description: "Efficient instruction-following model",
     provider: ModelProvider.HUGGINGFACE
+  },
+  {
+    id: AIModel.MISTRAL_7B,
+    name: "Mistral (7B)",
+    description: "Advanced instruction-tuned model",
+    provider: ModelProvider.HUGGINGFACE
+  },
+  {
+    id: AIModel.PHI_2,
+    name: "Phi-2",
+    description: "Microsoft's compact reasoning model",
+    provider: ModelProvider.HUGGINGFACE
+  },
+  {
+    id: AIModel.LLAMA_2_7B,
+    name: "Llama 2 (7B)",
+    description: "Meta's widely-used open model",
+    provider: ModelProvider.HUGGINGFACE
+  },
+  {
+    id: AIModel.GPT_4_O, // Moved to the end
+    name: "GPT-4o",
+    description: "Most capable OpenAI model",
+    provider: ModelProvider.OPENAI
   }
 ];
 
