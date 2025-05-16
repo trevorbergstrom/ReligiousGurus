@@ -2,6 +2,7 @@ import { useState } from "react";
 import { InfoIcon, Github, MessageCircle, Home, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
+import GuruLogo from "./GuruLogo";
 
 export default function Header() {
   const [location] = useLocation();
@@ -20,7 +21,7 @@ export default function Header() {
         {/* Logo - same on mobile and desktop */}
         <div className="flex items-center space-x-3" onClick={() => window.location.href = "/"} style={{cursor: "pointer"}}>
           <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center shadow-md overflow-hidden">
-            <img src="/generated-icon.png" alt="Religious Gurus Logo" className="w-full h-full object-cover" />
+            <GuruLogo className="w-full h-full" />
           </div>
           <div>
             <h1 className="text-lg md:text-2xl font-bold text-white">
