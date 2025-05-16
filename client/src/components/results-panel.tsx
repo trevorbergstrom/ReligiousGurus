@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, Fragment } from "react";
 import { Share, Bookmark, Download, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { WorldViewIcon, getWorldViewName } from "./world-view-icons";
@@ -15,6 +15,7 @@ type ResultsPanelProps = {
 export default function ResultsPanel({ data, isLoading }: ResultsPanelProps) {
   const chartRef = useRef<HTMLCanvasElement>(null);
   const chartInstance = useRef<Chart<"radar"> | null>(null);
+  const [showProcessDetails, setShowProcessDetails] = useState(false);
   
   // Initialize chart when data changes
   useEffect(() => {
@@ -121,8 +122,27 @@ export default function ResultsPanel({ data, isLoading }: ResultsPanelProps) {
             <Download className="h-5 w-5" />
             <span className="sr-only">Download</span>
           </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setShowProcessDetails(true)}
+            className="text-teal-600 hover:text-teal-700 hover:bg-teal-50 rounded-lg"
+            title="See how this was generated"
+          >
+            <Lightbulb className="h-5 w-5" />
+            <span className="sr-only">View Process Details</span>
+          </Button>
         </div>
       </div>
+      
+      {/* Process Details Panel */}
+      {showProcessDetails && data && (
+        <ProcessDetailsPanel 
+          topicId={data.topic.id} 
+          isOpen={showProcessDetails} 
+          onClose={() => setShowProcessDetails(false)} 
+        />
+      )}
 
       {/* Summary Section */}
       <div className="mb-8">
@@ -220,7 +240,7 @@ export default function ResultsPanel({ data, isLoading }: ResultsPanelProps) {
                 })();
                 
                 return (
-                  <React.Fragment key={comparison.worldview}>
+                  <div key={comparison.worldview}>
                     {/* Desktop row */}
                     <tr className="hover:bg-slate-50 transition-colors hidden md:table-row">
                       <td className="py-4 px-5 border-b border-slate-100">
@@ -294,7 +314,7 @@ export default function ResultsPanel({ data, isLoading }: ResultsPanelProps) {
                         </details>
                       </td>
                     </tr>
-                  </React.Fragment>
+                  </div>
                 );
               })}
             </tbody>
