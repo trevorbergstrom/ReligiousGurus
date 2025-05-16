@@ -84,8 +84,8 @@ const summaryGenerator = (() => {
 // Create a chart data generator
 const chartDataGenerator = (() => {
   const chartPrompt = ChatPromptTemplate.fromMessages([
-    ["system", "You are a data analyst specialized in comparative religion. Extract key religious concepts and theological patterns from different worldviews."],
-    ["user", `Topic: "{topic}"\n\nWorldview responses:\n{expertResponsesText}\n\nAnalyze these responses and identify 3-4 key religious or theological concepts/themes that differ across these worldviews (such as: divine intervention, moral authority, soul existence, ritual importance, afterlife beliefs, etc.). Focus on substantive religious differences rather than stylistic language differences. Then, score each worldview on these concepts based on how strongly they emphasize or affirm each concept (0-100). Return valid JSON data with a 'metrics' array (containing the religious concept names) and a 'scores' object mapping each worldview to its scores.`],
+    ["system", "You are a comparative religion scholar analyzing theological overlap between different religions and worldviews."],
+    ["user", `Topic: "{topic}"\n\nWorldview responses:\n{expertResponsesText}\n\nIdentify 3-4 fundamental religious concepts that are either shared or contested across these worldviews (e.g., monotheism, scripture-based authority, soul/afterlife, moral absolutes, etc.). For each concept, score each worldview (0-100) based on how central or important this concept is to that religion/worldview. Focus specifically on core theological positions that define each religion, not just their response to this topic. Return valid JSON data with a 'metrics' array (containing these core religious concepts) and a 'scores' object mapping each worldview to its scores. The visualization will directly show overlap between religions on these fundamental concepts.`],
   ]);
 
   return RunnableSequence.from([
