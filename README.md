@@ -23,6 +23,8 @@ Religious Gurus helps users explore how major worldviews interpret any topic the
 - Explore detailed comparisons in a structured format
 - Review past topics you've explored
 - One-on-one chat with AI agents representing each worldview
+- Multi-expert group chats with multiple worldview perspectives simultaneously
+- Behind-the-scenes process transparency to understand AI reasoning
 - Select from various OpenAI models (GPT-4o, GPT-4, GPT-3.5)
 - Educational and neutral presentation of diverse perspectives
 - Mobile-friendly, responsive design
@@ -49,11 +51,17 @@ The application is built using:
 6. Browse your history to revisit past topics
 
 ### Worldview Chat
-1. Select a worldview you want to chat with
-2. Enter your questions about that specific worldview
-3. Choose an OpenAI model for your conversation
-4. Receive responses from the perspective of that worldview
-5. Continue the conversation in a chat-like interface
+1. Select a worldview you want to chat with or create a group chat with multiple worldviews
+2. For single worldview chats:
+   - Click on any worldview button to start a one-on-one conversation
+3. For group chats with multiple perspectives:
+   - Click "New Chat" and select the "Group Chat" tab
+   - Select multiple worldviews you want to include in the conversation
+   - Enter an optional title for your group chat
+4. Enter your questions and receive responses from each selected worldview
+5. Choose an OpenAI model for your conversation
+6. Continue the conversation in a chat-like interface
+7. See different perspectives clearly labeled with worldview icons
 
 ## 🧬 System Architecture
 
@@ -63,6 +71,8 @@ The application uses an agentic AI framework:
 2. **Expert Agents**: Eight specialist agents representing each worldview
 3. **Response Synthesis**: Aggregates insights into summaries and visualizations
 4. **Transparent Processing**: Shows users how the AI generates its responses
+5. **Multi-Agent Conversations**: Enables discussions with multiple expert agents simultaneously
+6. **Parallel Processing**: Processes responses from multiple worldviews for group conversations
 
 ## 🔐 API Requirements
 

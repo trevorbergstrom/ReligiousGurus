@@ -1,3 +1,11 @@
+/**
+ * Religious Gurus - Comparative Worldview Explorer
+ * Copyright (c) 2025 Religious Gurus Project
+ * 
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 import { useState, useRef, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
