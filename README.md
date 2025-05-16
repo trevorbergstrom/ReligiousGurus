@@ -4,7 +4,7 @@ An educational AI application that provides neutral, comparative insights on rel
 
 ## 🧭 Purpose
 
-Religious Gurus helps users explore how major worldviews interpret any topic they submit by querying 7 AI agents representing different religious and non-religious belief systems:
+Religious Gurus helps users explore how major worldviews interpret any topic they submit by querying 8 AI agents representing different religious and non-religious belief systems:
 
 - Atheism
 - Agnosticism
@@ -13,15 +13,19 @@ Religious Gurus helps users explore how major worldviews interpret any topic the
 - Hinduism
 - Buddhism
 - Judaism
+- Sikhism
 
 ## 🏗️ Features
 
 - Submit topics or questions to explore different worldview interpretations
-- Receive a neutral summary comparing the 7 belief systems
+- Receive a neutral summary comparing the different belief systems
 - View data visualizations showing key differences and similarities
 - Explore detailed comparisons in a structured format
 - Review past topics you've explored
+- One-on-one chat with AI agents representing each worldview
+- Select from various OpenAI models (GPT-4o, GPT-4, GPT-3.5)
 - Educational and neutral presentation of diverse perspectives
+- Mobile-friendly, responsive design
 
 ## 🖥️ Technical Implementation
 
@@ -29,32 +33,53 @@ The application is built using:
 
 - **Frontend**: React, TypeScript, Tailwind CSS, shadcn/ui
 - **Backend**: Express.js with Node.js
-- **AI Integration**: OpenAI API (GPT-4o)
+- **AI Integration**: OpenAI API (GPT-4o and other models)
+- **Database**: PostgreSQL for persistent storage
 - **Data Visualization**: Chart.js
+- **API Integration**: OpenAI API
 
 ## 📝 Usage
 
+### Topic Comparisons
 1. Enter a topic or question in the text field
-2. Click "Get Comparative Insights" to submit
-3. Review the AI-generated summary paragraph
-4. Explore the chart visualization and detailed comparison table
-5. Browse your history to revisit past topics
+2. Select your preferred AI model
+3. Click "Get Comparative Insights" to submit
+4. Review the AI-generated summary paragraph
+5. Explore the chart visualization and detailed comparison table
+6. Browse your history to revisit past topics
+
+### Worldview Chat
+1. Select a worldview you want to chat with
+2. Enter your questions about that specific worldview
+3. Choose an OpenAI model for your conversation
+4. Receive responses from the perspective of that worldview
+5. Continue the conversation in a chat-like interface
 
 ## 🧬 System Architecture
 
 The application uses an agentic AI framework:
 
 1. **Coordinator Agent**: Receives user input and coordinates responses
-2. **Expert Agents**: Seven specialist agents representing each worldview
+2. **Expert Agents**: Eight specialist agents representing each worldview
 3. **Response Synthesis**: Aggregates insights into summaries and visualizations
+4. **Transparent Processing**: Shows users how the AI generates its responses
+
+## 🔐 API Requirements
+
+This application requires an OpenAI API key to function. The key should be added as an environment variable:
+- `OPENAI_API_KEY`: Your API key from OpenAI
 
 ## 📱 Mobile Support
 
-The application is fully responsive and supports all device sizes from mobile to desktop.
+The application is fully responsive and supports all device sizes from mobile to desktop, with optimized layouts for each form factor.
+
+## 🤝 Contributing
+
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to get started.
 
 ## 📜 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## ⚠️ Disclaimer
 
