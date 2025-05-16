@@ -199,19 +199,52 @@ const createChartDataGenerator = (state: AgentState) => {
   }
 };
 
-// Create a comparisons generator
-const comparisonsGenerator = (() => {
+// Create a comparisons generator that uses the selected model
+const createComparisonsGenerator = (state: AgentState) => {
   const comparisonPrompt = ChatPromptTemplate.fromMessages([
     ["system", "You are a comparative religion expert. Generate structured comparison data for each worldview."],
     ["user", `Topic: "{topic}"\n\nWorldview responses:\n{expertResponsesText}\n\nGenerate a JSON object with data for each worldview. For each worldview, create an entry with summary (1-2 sentences), keyConcepts (array of 2-3 key terms), and afterlifeType (single term). Return valid JSON.`],
   ]);
 
-  return RunnableSequence.from([
-    comparisonPrompt,
-    model.bind({ response_format: { type: "json_object" } }),
-    new JsonOutputParser(),
-  ]);
-})();
+  if (state.provider === ModelProvider.HUGGINGFACE) {
+    // For Hugging Face models
+    return async (input: { topic: string, expertResponsesText: string }) => {
+      const systemPrompt = "You are a comparative religion expert. Generate structured comparison data for each worldview.";
+      const userPrompt = `Topic: "${input.topic}"\n\nWorldview responses:\n${input.expertResponsesText}\n\nGenerate a JSON object with data for each worldview. For each worldview, create an entry with summary (1-2 sentences), keyConcepts (array of 2-3 key terms), and afterlifeType (single term). Return valid JSON.`;
+      
+      try {
+        const response = await generateTextWithHuggingFace(
+          state.model as HuggingFaceModels,
+          userPrompt,
+          systemPrompt
+        );
+        
+        // Attempt to parse the JSON response
+        try {
+          return JSON.parse(response);
+        } catch (parseError) {
+          console.error("Error parsing Hugging Face JSON response for comparisons:", parseError);
+          return {};
+        }
+      } catch (error) {
+        console.error("Error generating comparisons with Hugging Face:", error);
+        return {};
+      }
+    };
+  } else {
+    // For OpenAI
+    const customModel = new ChatOpenAI({
+      modelName: state.model,
+      temperature: 0,
+    });
+    
+    return RunnableSequence.from([
+      comparisonPrompt,
+      customModel.bind({ response_format: { type: "json_object" } }),
+      new JsonOutputParser(),
+    ]);
+  }
+};
 
 // Helper function to format worldview name
 const formatWorldviewName = (worldview: string): string => {
@@ -285,10 +318,24 @@ const nodes = {
     try {
       const expertResponsesText = formatExpertResponses(state.expertResponses);
       
-      const summary = await summaryGenerator.invoke({
-        topic: state.topic,
-        expertResponsesText
-      });
+      // Create a summary generator with the selected model
+      const summaryGen = createSummaryGenerator(state);
+      let summary = "";
+      
+      if (state.provider === ModelProvider.HUGGINGFACE) {
+        // Direct function call for Hugging Face
+        summary = await summaryGen({
+          topic: state.topic,
+          expertResponsesText
+        }) as string;
+      } else {
+        // RunnableSequence invoke for OpenAI
+        const runnable = summaryGen as RunnableSequence<any, any>;
+        summary = await runnable.invoke({
+          topic: state.topic,
+          expertResponsesText
+        });
+      }
       
       return {
         ...state,
@@ -309,11 +356,24 @@ const nodes = {
     try {
       const expertResponsesText = formatExpertResponses(state.expertResponses);
       
-      // Get chart data from AI model
-      const chartJson = await chartDataGenerator.invoke({
-        topic: state.topic,
-        expertResponsesText
-      }) as ChartDataResponse;
+      // Create a chart data generator with the selected model
+      const chartDataGen = createChartDataGenerator(state);
+      let chartJson: ChartDataResponse;
+      
+      if (state.provider === ModelProvider.HUGGINGFACE) {
+        // Direct function call for Hugging Face
+        chartJson = await chartDataGen({
+          topic: state.topic,
+          expertResponsesText
+        }) as ChartDataResponse;
+      } else {
+        // RunnableSequence invoke for OpenAI
+        const runnable = chartDataGen as RunnableSequence<any, any>;
+        chartJson = await runnable.invoke({
+          topic: state.topic,
+          expertResponsesText
+        }) as ChartDataResponse;
+      }
       
       // Add extensive logging to debug chart issues
       console.log("============= CHART DEBUG ===============");
