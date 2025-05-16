@@ -79,6 +79,9 @@ function createChatAgent(worldview: WorldView) {
     case WorldView.JUDAISM:
       worldviewSpecificInstructions = "As a Jewish perspective expert, reference Torah teachings, rabbinic literature, and Jewish theological concepts. Present mainstream Jewish views while acknowledging differences between major movements (Orthodox, Conservative, Reform, etc.) when relevant.";
       break;
+    case WorldView.SIKHISM:
+      worldviewSpecificInstructions = "As a Sikh perspective expert, reference teachings from the Guru Granth Sahib, the Sikh Gurus, and key Sikh theological concepts like Waheguru, Mukti, and Seva. Emphasize Sikh principles of equality, justice, honest work, and service to humanity.";
+      break;
   }
   
   const chatPrompt = ChatPromptTemplate.fromMessages([
