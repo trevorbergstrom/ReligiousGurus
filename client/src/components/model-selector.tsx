@@ -18,21 +18,21 @@ const MODELS: ModelInfo[] = [
     provider: ModelProvider.OPENAI
   },
   {
-    id: AIModel.LLAMA_2_70B,
-    name: "Llama 2 (70B)",
-    description: "Meta's large open model",
+    id: AIModel.GEMMA_7B,
+    name: "Gemma (7B)",
+    description: "Google's instruction model",
     provider: ModelProvider.HUGGINGFACE
   },
   {
-    id: AIModel.MISTRAL_7B,
-    name: "Mistral (7B)",
-    description: "Efficient instruction model",
+    id: AIModel.ZEPHYR,
+    name: "Zephyr (7B)",
+    description: "Fine-tuned instruction model",
     provider: ModelProvider.HUGGINGFACE
   },
   {
-    id: AIModel.MIXTRAL_8x7B,
-    name: "Mixtral (8x7B)",
-    description: "Mixture-of-experts model",
+    id: AIModel.FLAN_T5,
+    name: "Flan-T5",
+    description: "Google's T5 instruction model",
     provider: ModelProvider.HUGGINGFACE
   }
 ];

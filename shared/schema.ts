@@ -6,9 +6,10 @@ import { randomUUID } from "crypto";
 // Available models
 export enum AIModel {
   GPT_4_O = "gpt-4o",
-  LLAMA_2_70B = "meta-llama/Llama-2-70b-chat-hf",
-  MISTRAL_7B = "mistralai/Mistral-7B-Instruct-v0.2",
-  MIXTRAL_8x7B = "mistralai/Mixtral-8x7B-Instruct-v0.1",
+  GEMMA_7B = "google/gemma-7b-it",
+  ZEPHYR = "HuggingFaceH4/zephyr-7b-beta",
+  FLAN_T5 = "google/flan-t5-xxl",
+  BLOOM = "bigscience/bloom"
 }
 
 export enum ModelProvider {

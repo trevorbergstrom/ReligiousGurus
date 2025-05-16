@@ -6,12 +6,12 @@ if (!process.env.HUGGINGFACE_API_KEY) {
 
 const hf = new HfInference(process.env.HUGGINGFACE_API_KEY);
 
-// Supported models
+// Supported models - using publicly available models on Hugging Face
 export enum HuggingFaceModels {
-  LLAMA_2_70B = "meta-llama/Llama-2-70b-chat-hf",
-  MISTRAL_7B = "mistralai/Mistral-7B-Instruct-v0.2",
-  FALCON_40B = "tiiuae/falcon-40b-instruct",
-  MIXTRAL_8x7B = "mistralai/Mixtral-8x7B-Instruct-v0.1",
+  GEMMA_7B = "google/gemma-7b-it",
+  ZEPHYR = "HuggingFaceH4/zephyr-7b-beta",
+  FLAN_T5 = "google/flan-t5-xxl",
+  BLOOM = "bigscience/bloom"
 }
 
 export interface ModelConfig {
@@ -31,23 +31,23 @@ export const MODELS: ModelConfig[] = [
     apiKey: "OPENAI_API_KEY"
   },
   {
-    id: HuggingFaceModels.LLAMA_2_70B,
-    name: "Llama-2-70B (Hugging Face)",
-    description: "Meta's most capable open model",
+    id: HuggingFaceModels.GEMMA_7B,
+    name: "Gemma 7B",
+    description: "Google's instruction-tuned language model",
     provider: "huggingface",
     apiKey: "HUGGINGFACE_API_KEY"
   },
   {
-    id: HuggingFaceModels.MISTRAL_7B,
-    name: "Mistral-7B (Hugging Face)",
-    description: "Efficient, high-quality instruction model",
+    id: HuggingFaceModels.ZEPHYR,
+    name: "Zephyr 7B",
+    description: "Refined model with strong instruction following",
     provider: "huggingface",
     apiKey: "HUGGINGFACE_API_KEY"
   },
   {
-    id: HuggingFaceModels.MIXTRAL_8x7B,
-    name: "Mixtral-8x7B (Hugging Face)",
-    description: "Powerful mixture-of-experts model",
+    id: HuggingFaceModels.FLAN_T5,
+    name: "Flan-T5",
+    description: "Google's instruction-tuned T5 model",
     provider: "huggingface",
     apiKey: "HUGGINGFACE_API_KEY"
   }

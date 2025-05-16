@@ -80,7 +80,7 @@ export default function TopicForm({ topics, onSubmit, onSelectTopic, isLoading }
           Ask the Gurus
         </h2>
         <p className="text-primary-100 text-sm mt-1">
-          Enter a topic to explore interpretations across 7 worldviews
+          Enter a topic to explore interpretations across 8 worldviews
         </p>
       </div>
       
