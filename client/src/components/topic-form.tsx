@@ -46,19 +46,19 @@ export default function TopicForm({ topics, onSubmit, onSelectTopic, isLoading }
     defaultValues: {
       content: "",
       model: selectedModel,
-      provider: selectedProvider,
     },
   });
   
-  const handleModelChange = (model: string, provider: string) => {
+  const handleModelChange = (model: string, provider?: string) => {
     setSelectedModel(model);
-    setSelectedProvider(provider);
+    if (provider) {
+      setSelectedProvider(provider);
+    }
     form.setValue("model", model);
-    form.setValue("provider", provider);
   };
   
   const handleSubmit = (values: z.infer<typeof topicSchema>) => {
-    onSubmit(values.content, values.model, values.provider);
+    onSubmit(values.content, values.model, ModelProvider.OPENAI);
   };
   
   const handlePreviousTopicSelect = (value: string) => {

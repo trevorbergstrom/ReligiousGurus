@@ -27,7 +27,7 @@ const MODELS: ModelInfo[] = [
 
 interface ModelSelectorProps {
   selectedModel: string;
-  onChange: (model: string) => void;
+  onChange: (model: string, provider?: string) => void;
   disabled?: boolean;
 }
 
@@ -41,7 +41,7 @@ export default function ModelSelector({
       <label className="text-sm font-medium">Model</label>
       <Select
         value={selectedModel}
-        onValueChange={(value) => onChange(value)}
+        onValueChange={(value) => onChange(value, "openai")}
         disabled={disabled}
       >
         <SelectTrigger className="w-full">

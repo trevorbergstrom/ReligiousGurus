@@ -103,7 +103,6 @@ export default function Home() {
     submitNewTopic({ 
       content, 
       model
-      // Provider is now handled server-side with OpenAI as default
     });
   };
   
