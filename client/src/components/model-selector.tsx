@@ -1,5 +1,6 @@
 import { AIModel } from "@shared/schema";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 interface ModelInfo {
   id: string;
@@ -11,17 +12,17 @@ const MODELS: ModelInfo[] = [
   {
     id: AIModel.GPT_4_O,
     name: "GPT-4o",
-    description: "OpenAI's most advanced model with vision and reasoning capabilities"
+    description: "Most advanced model with vision capabilities"
   },
   {
     id: AIModel.GPT_4,
     name: "GPT-4",
-    description: "Legacy GPT-4 model, slightly less advanced than GPT-4o"
+    description: "Good for complex reasoning"
   },
   {
     id: AIModel.GPT_3_5_TURBO,
-    name: "GPT-3.5 Turbo",
-    description: "Faster model, good for simpler queries and high throughput"
+    name: "GPT-3.5",
+    description: "Faster, good for simple questions"
   }
 ];
 
@@ -39,25 +40,23 @@ export default function ModelSelector({
   return (
     <div className="flex flex-col space-y-2">
       <label className="text-sm font-medium text-slate-700">Model</label>
-      <Select
+      <RadioGroup 
+        defaultValue={selectedModel} 
         value={selectedModel}
         onValueChange={(value) => onChange(value, "openai")}
+        className="flex flex-col space-y-2"
         disabled={disabled}
       >
-        <SelectTrigger className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg">
-          <SelectValue className="truncate" placeholder="Select a model" />
-        </SelectTrigger>
-        <SelectContent className="w-[250px] md:w-[300px]">
-          {MODELS.map((model) => (
-            <SelectItem key={model.id} value={model.id} className="py-2">
-              <div className="flex flex-col">
-                <span className="font-medium">{model.name}</span>
-                <span className="text-xs text-muted-foreground mt-1">{model.description}</span>
-              </div>
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+        {MODELS.map((model) => (
+          <div key={model.id} className="flex items-center space-x-2 border border-slate-200 rounded-md p-2 bg-slate-50">
+            <RadioGroupItem value={model.id} id={model.id} />
+            <Label htmlFor={model.id} className="flex flex-col cursor-pointer w-full">
+              <span className="font-medium">{model.name}</span>
+              <span className="text-xs text-slate-500">{model.description}</span>
+            </Label>
+          </div>
+        ))}
+      </RadioGroup>
     </div>
   );
 }
