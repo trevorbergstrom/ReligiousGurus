@@ -271,6 +271,23 @@ export default function Chat() {
                   <span className={`text-xs font-medium ${getWorldViewColor(currentSession.worldview)}`}>
                     {getWorldViewName(currentSession.worldview as WorldView)}
                   </span>
+                  
+                  {/* Model badge - only show for AI messages */}
+                  {msg.provider && msg.model && (
+                    <span className="ml-2 px-1.5 py-0.5 text-[10px] rounded-full bg-slate-200 text-slate-700 flex items-center">
+                      {msg.provider === "openai" ? (
+                        <>
+                          <span className="font-semibold mr-0.5">OpenAI</span>
+                          {msg.model.includes("gpt") && msg.model.split('/').pop()}
+                        </>
+                      ) : (
+                        <>
+                          <span className="font-semibold mr-0.5">Hugging Face</span>
+                          {msg.model.split('/').pop()}
+                        </>
+                      )}
+                    </span>
+                  )}
                 </div>
               )}
               <p className="whitespace-pre-wrap">{msg.content}</p>
