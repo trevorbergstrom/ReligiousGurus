@@ -67,29 +67,38 @@ interface ComparisonDataResponse {
 }
 
 // Create expert agent functions for each worldview
+// Define union type for expert agent return values
+type ExpertAgentReturn = 
+  | ((input: { topic: string }) => Promise<string>) 
+  | RunnableSequence<any, string>;
+
 const createExpertAgent = (worldview: WorldView) => {
+  // Common prompt texts
+  const systemPromptText = `You are an expert in ${worldview}. Provide a neutral, educational response about the given topic from the perspective of ${worldview}. Use 1-2 concise sentences.`;
+  const userPromptTemplate = `Given the topic "{topic}", describe the ${worldview} worldview's stance in 1-2 sentences, using neutral and educational language. Avoid bias or judgment.`;
+  
+  // Create the expert prompt for OpenAI
   const expertPrompt = ChatPromptTemplate.fromMessages([
-    ["system", `You are an expert in ${worldview}. Provide a neutral, educational response about the given topic from the perspective of ${worldview}. Use 1-2 concise sentences.`],
-    ["user", `Given the topic "{topic}", describe the ${worldview} worldview's stance in 1-2 sentences, using neutral and educational language. Avoid bias or judgment.`],
+    ["system", systemPromptText],
+    ["user", userPromptTemplate],
   ]);
 
-  return (state: AgentState) => {
+  return (state: AgentState): ExpertAgentReturn => {
     if (state.provider === ModelProvider.HUGGINGFACE) {
       // For Hugging Face models, return a function that directly calls the HF API
       return async (input: { topic: string }): Promise<string> => {
-        const systemPrompt = `You are an expert in ${worldview}. Provide a neutral, educational response about the given topic from the perspective of ${worldview}. Use 1-2 concise sentences.`;
         const userPrompt = `Given the topic "${input.topic}", describe the ${worldview} worldview's stance in 1-2 sentences, using neutral and educational language. Avoid bias or judgment.`;
         
         try {
           const response = await generateTextWithHuggingFace(
             state.model as HuggingFaceModels,
             userPrompt,
-            systemPrompt
+            systemPromptText
           );
           return response;
         } catch (error) {
           console.error(`Error with Hugging Face model for ${worldview}:`, error);
-          return `Error: Failed to get response from ${worldview} perspective using Hugging Face.`;
+          return `Error: Failed to get response from ${worldview} perspective.`;
         }
       };
     } else {
@@ -108,8 +117,13 @@ const createExpertAgent = (worldview: WorldView) => {
   };
 };
 
+// Define union type for summary generator return values
+type SummaryGeneratorReturn = 
+  | ((input: { topic: string, expertResponsesText: string }) => Promise<string>) 
+  | RunnableSequence<any, string>;
+
 // Create a summary generator that uses the selected model
-const createSummaryGenerator = (state: AgentState) => {
+const createSummaryGenerator = (state: AgentState): SummaryGeneratorReturn => {
   // Common system prompt
   const systemPromptText = "You are a neutral comparative religion expert. Synthesize the provided worldview responses into a coherent summary paragraph that highlights similarities and differences without bias.";
   
@@ -150,24 +164,27 @@ const createSummaryGenerator = (state: AgentState) => {
   }
 };
 
+// Define union type for chart data generator return values
+type ChartDataGeneratorReturn = 
+  | ((input: { topic: string, expertResponsesText: string }) => Promise<ChartDataResponse>) 
+  | RunnableSequence<any, ChartDataResponse>;
+
 // Create a chart data generator that uses the selected model
-const createChartDataGenerator = (state: AgentState) => {
-  const chartPrompt = ChatPromptTemplate.fromMessages([
-    ["system", "You are a comparative religion scholar analyzing theological overlap between different religions and worldviews."],
-    ["user", `Topic: "{topic}"\n\nWorldview responses:\n{expertResponsesText}\n\nIdentify exactly 4 fundamental religious concepts that are either shared or contested across these worldviews (such as monotheism, scripture-based authority, soul/afterlife, moral absolutes, etc.). For each concept, score each worldview from 0 to 100 based on how central or important this concept is to that religion or worldview.\n\nReturn valid JSON data containing metrics (array of concept names) and scores (object mapping each worldview to an array of scores).`],
-  ]);
+const createChartDataGenerator = (state: AgentState): ChartDataGeneratorReturn => {
+  // Common prompt texts
+  const systemPromptText = "You are a comparative religion scholar analyzing theological overlap between different religions and worldviews.";
+  const userPromptTemplate = `Topic: "{topic}"\n\nWorldview responses:\n{expertResponsesText}\n\nIdentify exactly 4 fundamental religious concepts that are either shared or contested across these worldviews (such as monotheism, scripture-based authority, soul/afterlife, moral absolutes, etc.). For each concept, score each worldview from 0 to 100 based on how central or important this concept is to that religion or worldview.\n\nReturn valid JSON data containing metrics (array of concept names) and scores (object mapping each worldview to an array of scores).`;
 
   if (state.provider === ModelProvider.HUGGINGFACE) {
-    // For Hugging Face models
-    return async (input: { topic: string, expertResponsesText: string }) => {
-      const systemPrompt = "You are a comparative religion scholar analyzing theological overlap between different religions and worldviews.";
+    // For Hugging Face models - return a function that directly calls the HF API
+    return async (input: { topic: string, expertResponsesText: string }): Promise<ChartDataResponse> => {
       const userPrompt = `Topic: "${input.topic}"\n\nWorldview responses:\n${input.expertResponsesText}\n\nIdentify exactly 4 fundamental religious concepts that are either shared or contested across these worldviews (such as monotheism, scripture-based authority, soul/afterlife, moral absolutes, etc.). For each concept, score each worldview from 0 to 100 based on how central or important this concept is to that religion or worldview.\n\nReturn valid JSON data containing metrics (array of concept names) and scores (object mapping each worldview to an array of scores).`;
       
       try {
         const response = await generateTextWithHuggingFace(
           state.model as HuggingFaceModels,
           userPrompt,
-          systemPrompt
+          systemPromptText
         );
         
         // Attempt to parse the JSON response
@@ -183,7 +200,12 @@ const createChartDataGenerator = (state: AgentState) => {
       }
     };
   } else {
-    // For OpenAI
+    // For OpenAI - use LangChain runnable
+    const chartPrompt = ChatPromptTemplate.fromMessages([
+      ["system", systemPromptText],
+      ["user", userPromptTemplate],
+    ]);
+    
     const customModel = new ChatOpenAI({
       modelName: state.model,
       temperature: 0,
@@ -197,24 +219,27 @@ const createChartDataGenerator = (state: AgentState) => {
   }
 };
 
+// Define union type for comparisons generator return values
+type ComparisonsGeneratorReturn = 
+  | ((input: { topic: string, expertResponsesText: string }) => Promise<ComparisonDataResponse>) 
+  | RunnableSequence<any, ComparisonDataResponse>;
+
 // Create a comparisons generator that uses the selected model
-const createComparisonsGenerator = (state: AgentState) => {
-  const comparisonPrompt = ChatPromptTemplate.fromMessages([
-    ["system", "You are a comparative religion expert. Generate structured comparison data for each worldview."],
-    ["user", `Topic: "{topic}"\n\nWorldview responses:\n{expertResponsesText}\n\nGenerate a JSON object with data for each worldview. For each worldview, create an entry with summary (1-2 sentences), keyConcepts (array of 2-3 key terms), and afterlifeType (single term). Return valid JSON.`],
-  ]);
+const createComparisonsGenerator = (state: AgentState): ComparisonsGeneratorReturn => {
+  // Common prompt texts
+  const systemPromptText = "You are a comparative religion expert. Generate structured comparison data for each worldview.";
+  const userPromptTemplate = `Topic: "{topic}"\n\nWorldview responses:\n{expertResponsesText}\n\nGenerate a JSON object with data for each worldview. For each worldview, create an entry with summary (1-2 sentences), keyConcepts (array of 2-3 key terms), and afterlifeType (single term). Return valid JSON.`;
 
   if (state.provider === ModelProvider.HUGGINGFACE) {
-    // For Hugging Face models
-    return async (input: { topic: string, expertResponsesText: string }) => {
-      const systemPrompt = "You are a comparative religion expert. Generate structured comparison data for each worldview.";
+    // For Hugging Face models - return a function that directly calls the HF API
+    return async (input: { topic: string, expertResponsesText: string }): Promise<ComparisonDataResponse> => {
       const userPrompt = `Topic: "${input.topic}"\n\nWorldview responses:\n${input.expertResponsesText}\n\nGenerate a JSON object with data for each worldview. For each worldview, create an entry with summary (1-2 sentences), keyConcepts (array of 2-3 key terms), and afterlifeType (single term). Return valid JSON.`;
       
       try {
         const response = await generateTextWithHuggingFace(
           state.model as HuggingFaceModels,
           userPrompt,
-          systemPrompt
+          systemPromptText
         );
         
         // Attempt to parse the JSON response
@@ -230,7 +255,12 @@ const createComparisonsGenerator = (state: AgentState) => {
       }
     };
   } else {
-    // For OpenAI
+    // For OpenAI - use LangChain runnable
+    const comparisonPrompt = ChatPromptTemplate.fromMessages([
+      ["system", systemPromptText],
+      ["user", userPromptTemplate],
+    ]);
+    
     const customModel = new ChatOpenAI({
       modelName: state.model,
       temperature: 0,
@@ -262,7 +292,7 @@ const nodes = {
   collectExpertResponses: async (state: AgentState): Promise<AgentState> => {
     try {
       // Create a map of expert agents for each worldview
-      const expertAgents: Record<WorldView, any> = {} as any;
+      const expertAgents: Record<WorldView, ExpertAgentReturn> = {} as Record<WorldView, ExpertAgentReturn>;
       for (const worldview of Object.values(WorldView)) {
         const expertAgentFn = createExpertAgent(worldview)(state);
         expertAgents[worldview] = expertAgentFn;
@@ -274,10 +304,12 @@ const nodes = {
           let response;
           if (state.provider === ModelProvider.HUGGINGFACE) {
             // Direct function call for Hugging Face
-            response = await agentFn({ topic: state.topic });
+            const hfAgentFn = agentFn as (input: { topic: string }) => Promise<string>;
+            response = await hfAgentFn({ topic: state.topic });
           } else {
             // RunnableSequence invoke for OpenAI
-            response = await agentFn.invoke({ topic: state.topic });
+            const openAIAgentFn = agentFn as RunnableSequence<any, string>;
+            response = await openAIAgentFn.invoke({ topic: state.topic });
           }
           return { worldview, response, error: null };
         } catch (error) {
@@ -328,19 +360,25 @@ const nodes = {
       const summaryGen = createSummaryGenerator(state);
       let summary = "";
       
-      if (state.provider === ModelProvider.HUGGINGFACE) {
-        // Direct function call for Hugging Face
-        summary = await summaryGen({
-          topic: state.topic,
-          expertResponsesText
-        }) as string;
-      } else {
-        // RunnableSequence invoke for OpenAI
-        const runnable = summaryGen as RunnableSequence<any, any>;
-        summary = await runnable.invoke({
-          topic: state.topic,
-          expertResponsesText
-        });
+      try {
+        if (state.provider === ModelProvider.HUGGINGFACE) {
+          // Direct function call for Hugging Face
+          const hfSummaryGen = summaryGen as (input: { topic: string, expertResponsesText: string }) => Promise<string>;
+          summary = await hfSummaryGen({
+            topic: state.topic,
+            expertResponsesText
+          });
+        } else {
+          // RunnableSequence invoke for OpenAI
+          const openAISummaryGen = summaryGen as RunnableSequence<any, string>;
+          summary = await openAISummaryGen.invoke({
+            topic: state.topic,
+            expertResponsesText
+          });
+        }
+      } catch (genError) {
+        console.error("Error generating summary:", genError);
+        summary = "Unable to generate summary at this time.";
       }
       
       return {
@@ -366,19 +404,25 @@ const nodes = {
       const chartDataGen = createChartDataGenerator(state);
       let chartJson: ChartDataResponse;
       
-      if (state.provider === ModelProvider.HUGGINGFACE) {
-        // Direct function call for Hugging Face
-        chartJson = await chartDataGen({
-          topic: state.topic,
-          expertResponsesText
-        }) as ChartDataResponse;
-      } else {
-        // RunnableSequence invoke for OpenAI
-        const runnable = chartDataGen as RunnableSequence<any, any>;
-        chartJson = await runnable.invoke({
-          topic: state.topic,
-          expertResponsesText
-        }) as ChartDataResponse;
+      try {
+        if (state.provider === ModelProvider.HUGGINGFACE) {
+          // Direct function call for Hugging Face
+          const hfChartGen = chartDataGen as (input: { topic: string, expertResponsesText: string }) => Promise<ChartDataResponse>;
+          chartJson = await hfChartGen({
+            topic: state.topic,
+            expertResponsesText
+          });
+        } else {
+          // RunnableSequence invoke for OpenAI
+          const openAIChartGen = chartDataGen as RunnableSequence<any, ChartDataResponse>;
+          chartJson = await openAIChartGen.invoke({
+            topic: state.topic,
+            expertResponsesText
+          });
+        }
+      } catch (genError) {
+        console.error("Error generating chart data:", genError);
+        chartJson = { metrics: ["error"], scores: {} };
       }
       
       // Add extensive logging to debug chart issues
@@ -495,21 +539,27 @@ const nodes = {
       
       // Create a comparisons generator with the selected model
       const comparisonsGen = createComparisonsGenerator(state);
-      let comparisonData: ComparisonDataResponse;
+      let comparisonData: ComparisonDataResponse = {};
       
-      if (state.provider === ModelProvider.HUGGINGFACE) {
-        // Direct function call for Hugging Face
-        comparisonData = await comparisonsGen({
-          topic: state.topic,
-          expertResponsesText
-        }) as ComparisonDataResponse;
-      } else {
-        // RunnableSequence invoke for OpenAI
-        const runnable = comparisonsGen as RunnableSequence<any, any>;
-        comparisonData = await runnable.invoke({
-          topic: state.topic,
-          expertResponsesText
-        }) as ComparisonDataResponse;
+      try {
+        if (state.provider === ModelProvider.HUGGINGFACE) {
+          // Direct function call for Hugging Face
+          const hfCompGen = comparisonsGen as (input: { topic: string, expertResponsesText: string }) => Promise<ComparisonDataResponse>;
+          comparisonData = await hfCompGen({
+            topic: state.topic,
+            expertResponsesText
+          });
+        } else {
+          // RunnableSequence invoke for OpenAI
+          const openAICompGen = comparisonsGen as RunnableSequence<any, ComparisonDataResponse>;
+          comparisonData = await openAICompGen.invoke({
+            topic: state.topic,
+            expertResponsesText
+          });
+        }
+      } catch (genError) {
+        console.error("Error generating comparisons:", genError);
+        comparisonData = {};
       }
       
       // Convert to our schema format with safety checks
