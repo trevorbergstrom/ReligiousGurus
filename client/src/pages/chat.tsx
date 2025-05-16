@@ -6,6 +6,16 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { WorldView, ChatMessage, ChatSession } from '@shared/schema';
@@ -16,6 +26,7 @@ import {
   fetchChatSession,
   fetchChatMessages,
   createChatSession,
+  deleteChatSession,
   sendChatMessage
 } from '@/lib/api';
 
@@ -90,6 +101,32 @@ export default function Chat() {
     },
   });
 
+  // Delete chat session mutation
+  const deleteSessionMutation = useMutation({
+    mutationFn: (id: string) => deleteChatSession(id),
+    onSuccess: () => {
+      if (sessionId === sessionToDelete) {
+        setSessionId(null); // Clear the current session if it was deleted
+      }
+      queryClient.invalidateQueries({ queryKey: ['/api/chat/sessions'] });
+      toast({
+        title: 'Session deleted',
+        description: 'Chat session was deleted successfully.',
+      });
+    },
+    onError: () => {
+      toast({
+        title: 'Error',
+        description: 'Failed to delete chat session. Please try again.',
+        variant: 'destructive',
+      });
+    },
+  });
+  
+  // Track the session being deleted for UI purposes
+  const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+
   // Send message mutation
   const sendMessageMutation = useMutation({
     mutationFn: (content: string) => 
@@ -135,6 +172,20 @@ export default function Chat() {
       worldview: newSessionWorldview,
       title: newSessionTitle,
     });
+  };
+  
+  // Handle session deletion
+  const handleDeleteClick = (e: React.MouseEvent, sessionId: string) => {
+    e.stopPropagation(); // Prevent selecting the session
+    setSessionToDelete(sessionId);
+    setDeleteConfirmOpen(true);
+  };
+  
+  const confirmDelete = () => {
+    if (sessionToDelete) {
+      deleteSessionMutation.mutate(sessionToDelete);
+      setDeleteConfirmOpen(false);
+    }
   };
 
   // Render messages
@@ -309,21 +360,35 @@ export default function Chat() {
               ) : (
                 <div className="space-y-2">
                   {sessions.map((session: ChatSession) => (
-                    <Button
-                      key={session.id}
-                      variant={sessionId === session.id ? "default" : "outline"}
-                      className="w-full justify-start"
-                      onClick={() => setSessionId(session.id)}
-                    >
-                      <div className="flex items-center">
-                        <WorldViewIcon
-                          worldview={session.worldview as WorldView}
-                          size={20}
-                          className="mr-2"
-                        />
-                        <div className="truncate">{session.title}</div>
-                      </div>
-                    </Button>
+                    <div key={session.id} className="flex items-center gap-2">
+                      <Button
+                        variant={sessionId === session.id ? "default" : "outline"}
+                        className="w-full justify-start"
+                        onClick={() => setSessionId(session.id)}
+                      >
+                        <div className="flex items-center">
+                          <WorldViewIcon
+                            worldview={session.worldview as WorldView}
+                            size={20}
+                            className="mr-2"
+                          />
+                          <div className="truncate">{session.title}</div>
+                        </div>
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="flex-shrink-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                        onClick={(e) => handleDeleteClick(e, session.id)}
+                        disabled={deleteSessionMutation.isPending}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M3 6h18"></path>
+                          <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                          <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                        </svg>
+                      </Button>
+                    </div>
                   ))}
                 </div>
               )}
@@ -439,6 +504,25 @@ export default function Chat() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this chat session and all its messages.
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-red-500 text-white hover:bg-red-600">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
