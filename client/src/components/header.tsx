@@ -19,8 +19,8 @@ export default function Header() {
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         {/* Logo - same on mobile and desktop */}
         <div className="flex items-center space-x-3" onClick={() => window.location.href = "/"} style={{cursor: "pointer"}}>
-          <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-teal-400 to-teal-600 rounded-xl flex items-center justify-center shadow-md">
-            <span className="text-white text-lg md:text-xl font-bold">RG</span>
+          <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center shadow-md overflow-hidden">
+            <img src="/generated-icon.png" alt="Religious Gurus Logo" className="w-full h-full object-cover" />
           </div>
           <div>
             <h1 className="text-lg md:text-2xl font-bold text-white">
