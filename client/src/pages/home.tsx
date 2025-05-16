@@ -97,10 +97,10 @@ export default function Home() {
   // Track the topic being deleted for UI purposes
   const [topicToDelete, setTopicToDelete] = useState<number | null>(null);
   
-  const handleTopicSubmit = (content: string) => {
+  const handleTopicSubmit = (content: string, model: string, provider: string) => {
     // Clear any search when submitting a new topic
     setSearchQuery(undefined);
-    submitNewTopic(content);
+    submitNewTopic({ content, model, provider });
   };
   
   const handleSelectTopic = (topicId: number) => {

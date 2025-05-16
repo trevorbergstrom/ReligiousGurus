@@ -1,6 +1,6 @@
 import { apiRequest } from "./queryClient";
 import { TopicData, ResponseData, TopicResponsePair } from "@/types";
-import { ChatSession, ChatMessage, WorldView } from "@shared/schema";
+import { ChatSession, ChatMessage, WorldView, AIModel, ModelProvider } from "@shared/schema";
 
 // API functions for interacting with the backend
 
@@ -12,8 +12,19 @@ export const fetchTopics = async (query?: string): Promise<TopicData[]> => {
 };
 
 // Submit a new topic
-export const submitTopic = async (content: string): Promise<TopicResponsePair> => {
-  const response = await apiRequest("POST", "/api/topics", { content });
+export const submitTopic = async (data: { 
+  content: string, 
+  model?: string, 
+  provider?: string 
+}): Promise<TopicResponsePair> => {
+  // Apply defaults if not provided
+  const payload = {
+    content: data.content,
+    model: data.model || AIModel.GPT_4_O,
+    provider: data.provider || ModelProvider.OPENAI
+  };
+  
+  const response = await apiRequest("POST", "/api/topics", payload);
   return await response.json();
 };
 

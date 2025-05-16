@@ -39,16 +39,27 @@ type TopicFormProps = {
 
 export default function TopicForm({ topics, onSubmit, onSelectTopic, isLoading }: TopicFormProps) {
   const [selectedPreviousTopic, setSelectedPreviousTopic] = useState<string>("");
+  const [selectedModel, setSelectedModel] = useState<string>(AIModel.GPT_4_O);
+  const [selectedProvider, setSelectedProvider] = useState<string>(ModelProvider.OPENAI);
 
   const form = useForm<z.infer<typeof topicSchema>>({
     resolver: zodResolver(topicSchema),
     defaultValues: {
       content: "",
+      model: selectedModel,
+      provider: selectedProvider,
     },
   });
   
+  const handleModelChange = (model: string, provider: string) => {
+    setSelectedModel(model);
+    setSelectedProvider(provider);
+    form.setValue("model", model);
+    form.setValue("provider", provider);
+  };
+  
   const handleSubmit = (values: z.infer<typeof topicSchema>) => {
-    onSubmit(values.content);
+    onSubmit(values.content, values.model, values.provider);
   };
   
   const handlePreviousTopicSelect = (value: string) => {
@@ -112,6 +123,15 @@ export default function TopicForm({ topics, onSubmit, onSelectTopic, isLoading }
                   )}
                 </SelectContent>
               </Select>
+            </div>
+            
+            {/* Model Selector */}
+            <div className="mt-4">
+              <ModelSelector
+                selectedModel={selectedModel}
+                onChange={handleModelChange}
+                disabled={isLoading}
+              />
             </div>
             
             <Button
