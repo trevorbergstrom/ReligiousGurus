@@ -27,7 +27,6 @@ import { AIModel, ModelProvider } from "@shared/schema";
 const topicSchema = z.object({
   content: z.string().min(1, "Please enter a topic"),
   model: z.string().default(AIModel.GPT_4_O),
-  provider: z.string().default(ModelProvider.OPENAI),
 });
 
 type TopicFormProps = {
@@ -39,8 +38,8 @@ type TopicFormProps = {
 
 export default function TopicForm({ topics, onSubmit, onSelectTopic, isLoading }: TopicFormProps) {
   const [selectedPreviousTopic, setSelectedPreviousTopic] = useState<string>("");
-  const [selectedModel, setSelectedModel] = useState<string>(AIModel.LLAMA_3_1B);
-  const [selectedProvider, setSelectedProvider] = useState<string>(ModelProvider.HUGGINGFACE);
+  const [selectedModel, setSelectedModel] = useState<string>(AIModel.GPT_4_O);
+  const [selectedProvider, setSelectedProvider] = useState<string>(ModelProvider.OPENAI);
 
   const form = useForm<z.infer<typeof topicSchema>>({
     resolver: zodResolver(topicSchema),

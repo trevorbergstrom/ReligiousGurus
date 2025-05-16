@@ -102,8 +102,8 @@ export default function Home() {
     setSearchQuery(undefined);
     submitNewTopic({ 
       content, 
-      model, 
-      provider 
+      model
+      // Provider is now handled server-side with OpenAI as default
     });
   };
   
@@ -123,7 +123,7 @@ export default function Home() {
   };
   
   return (
-    <div className="bg-pattern min-h-screen pb-8">
+    <div className="bg-clean min-h-screen pb-8">
       <main className="container mx-auto px-4 py-6 flex-grow">
         <h1 className="text-3xl font-bold text-center mb-4 bg-gradient-to-r from-teal-600 to-blue-500 text-transparent bg-clip-text">Welcome to Religious Gurus</h1>
         <p className="text-center text-lg mb-8 max-w-3xl mx-auto text-slate-700">
