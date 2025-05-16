@@ -110,6 +110,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch response" });
     }
   });
+  
+  // Delete a topic
+  app.delete("/api/topics/:topicId", async (req, res) => {
+    try {
+      const topicId = parseInt(req.params.topicId);
+      
+      if (isNaN(topicId)) {
+        return res.status(400).json({ message: "Invalid topic ID" });
+      }
+      
+      // Check if the topic exists
+      const topic = await storage.getTopic(topicId);
+      if (!topic) {
+        return res.status(404).json({ message: "Topic not found" });
+      }
+      
+      // Delete the topic (this will also delete the associated response)
+      await storage.deleteTopic(topicId);
+      
+      res.status(204).end();
+    } catch (error) {
+      console.error("Error deleting topic:", error);
+      res.status(500).json({ message: "Failed to delete topic" });
+    }
+  });
 
   // CHAT ROUTES
   // Get all chat sessions
@@ -161,6 +186,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.error("Error creating chat session:", error);
       res.status(500).json({ message: "Failed to create chat session" });
+    }
+  });
+  
+  // Delete a chat session
+  app.delete("/api/chat/sessions/:id", async (req, res) => {
+    try {
+      const id = req.params.id;
+      
+      // Check if the session exists
+      const session = await storage.getChatSession(id);
+      if (!session) {
+        return res.status(404).json({ message: "Chat session not found" });
+      }
+      
+      // Delete the session (this will also delete all associated messages)
+      await storage.deleteChatSession(id);
+      
+      res.status(204).end();
+    } catch (error) {
+      console.error("Error deleting chat session:", error);
+      res.status(500).json({ message: "Failed to delete chat session" });
     }
   });
   

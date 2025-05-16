@@ -1,19 +1,32 @@
 import { TopicData } from "@/types";
 import { formatRelative } from "date-fns";
-import { History, Clock, ArrowRight, Search } from "lucide-react";
+import { History, Clock, ArrowRight, Search, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type HistoryPanelProps = {
   topics: TopicData[];
   onSelectTopic: (topicId: number) => void;
   onSearch?: (query: string) => void;
+  onDeleteTopic?: (topicId: number) => void;
 };
 
-export default function HistoryPanel({ topics, onSelectTopic, onSearch }: HistoryPanelProps) {
+export default function HistoryPanel({ topics, onSelectTopic, onSearch, onDeleteTopic }: HistoryPanelProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [showAllTopics, setShowAllTopics] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [topicToDelete, setTopicToDelete] = useState<number | null>(null);
   
   // Show either 5 topics or all topics based on user preference
   const displayTopics = showAllTopics ? topics : topics.slice(0, 5);
@@ -29,6 +42,20 @@ export default function HistoryPanel({ topics, onSelectTopic, onSearch }: Histor
     setSearchQuery('');
     if (onSearch) {
       onSearch('');
+    }
+  };
+  
+  const handleDeleteClick = (e: React.MouseEvent, topicId: number) => {
+    e.stopPropagation(); // Prevent the topic from being selected
+    setTopicToDelete(topicId);
+    setDeleteConfirmOpen(true);
+  };
+  
+  const confirmDelete = () => {
+    if (topicToDelete !== null && onDeleteTopic) {
+      onDeleteTopic(topicToDelete);
+      setDeleteConfirmOpen(false);
+      setTopicToDelete(null);
     }
   };
   
@@ -94,19 +121,35 @@ export default function HistoryPanel({ topics, onSelectTopic, onSearch }: Histor
                   key={topic.id} 
                   className="border border-slate-200 rounded-lg hover:border-primary-200 hover:bg-slate-50 transition-all shadow-sm hover:shadow"
                 >
-                  <button 
-                    className="w-full text-left p-4"
-                    onClick={() => onSelectTopic(topic.id)}
-                  >
-                    <div className="flex justify-between items-start">
-                      <h3 className="font-medium text-slate-800">{topic.content}</h3>
-                      <ArrowRight className="h-4 w-4 text-slate-400 mt-1 transform group-hover:translate-x-1 transition-transform" />
-                    </div>
-                    <p className="text-sm text-slate-500 mt-2 flex items-center">
-                      <Clock className="h-3 w-3 mr-1 inline" />
-                      {formatRelative(new Date(topic.createdAt), new Date())}
-                    </p>
-                  </button>
+                  <div className="p-4">
+                    <button 
+                      className="w-full text-left"
+                      onClick={() => onSelectTopic(topic.id)}
+                    >
+                      <div className="flex justify-between items-start">
+                        <h3 className="font-medium text-slate-800">{topic.content}</h3>
+                        <ArrowRight className="h-4 w-4 text-slate-400 mt-1 transform group-hover:translate-x-1 transition-transform" />
+                      </div>
+                      <p className="text-sm text-slate-500 mt-2 flex items-center">
+                        <Clock className="h-3 w-3 mr-1 inline" />
+                        {formatRelative(new Date(topic.createdAt), new Date())}
+                      </p>
+                    </button>
+                    
+                    {onDeleteTopic && (
+                      <div className="mt-2 flex justify-end">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                          onClick={(e) => handleDeleteClick(e, topic.id)}
+                        >
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          Delete
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -137,6 +180,25 @@ export default function HistoryPanel({ topics, onSelectTopic, onSearch }: Histor
           </>
         )}
       </div>
+      
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this topic and its associated response.
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-red-500 text-white hover:bg-red-600">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
