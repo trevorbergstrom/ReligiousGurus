@@ -763,7 +763,7 @@ export default function Chat() {
             <TabsContent value="group" className="space-y-4 py-4">
               <div className="space-y-2">
                 <Label>Select Multiple Worldview Experts</Label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1">
+                <div className="grid grid-cols-2 gap-2 mt-1">
                   {Object.values(WorldView).map((worldview) => {
                     const isSelected = selectedWorldviews.includes(worldview);
                     return (
@@ -780,18 +780,17 @@ export default function Chat() {
                           isSelected ? 'bg-teal-50 border-teal-500' : 'bg-gray-50 border-gray-200'
                         }`}
                       >
-                        <div className={`w-4 h-4 mr-2 rounded border ${
-                          isSelected ? 'bg-teal-500 border-teal-500' : 'border-gray-300'
-                        }`}>
-                          {isSelected && (
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" className="w-4 h-4">
-                              <path fillRule="evenodd" d="M19.916 4.626a.75.75 0 01.208 1.04l-9 13.5a.75.75 0 01-1.154.114l-6-6a.75.75 0 011.06-1.06l5.353 5.353 8.493-12.739a.75.75 0 011.04-.208z" clipRule="evenodd" />
-                            </svg>
-                          )}
-                        </div>
-                        <div className="flex items-center flex-1 min-w-0">
-                          <WorldViewIcon worldview={worldview as WorldView} size={16} className="mr-1 flex-shrink-0" />
-                          <span className="text-sm truncate">{getWorldViewName(worldview as WorldView)}</span>
+                        <input 
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => {}}
+                          className="w-4 h-4 mr-2 rounded border accent-teal-500"
+                        />
+                        <div className="flex flex-col items-start">
+                          <div className="flex items-center">
+                            <WorldViewIcon worldview={worldview as WorldView} size={14} className="mr-1 flex-shrink-0" />
+                            <span className="font-medium text-sm">{getWorldViewName(worldview as WorldView)}</span>
+                          </div>
                         </div>
                       </div>
                     );
