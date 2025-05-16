@@ -93,8 +93,8 @@ const summaryGenerator = (() => {
 // Create a chart data generator
 const chartDataGenerator = (() => {
   const chartPrompt = ChatPromptTemplate.fromMessages([
-    ["system", "You are a data analyst specialized in comparative religion. Generate numerical data for a radar chart comparing different aspects of worldviews on the given topic."],
-    ["user", `Topic: "{topic}"\n\nWorldview responses:\n{expertResponsesText}\n\nGenerate JSON data for a radar chart that compares these worldviews. Identify 3 relevant metrics for comparison (like certainty, emphasis, alignment with core doctrine, etc.) and score each worldview on these metrics from 0-100. Return valid JSON data with a metrics array and scores object.`],
+    ["system", "You are a data analyst specialized in comparative religion. Extract key language patterns from the worldviews' responses to generate meaningful visualization data."],
+    ["user", `Topic: "{topic}"\n\nWorldview responses:\n{expertResponsesText}\n\nAnalyze the language used in these responses and identify 3-4 key concepts or themes that appear across multiple worldviews. These should be naturally derived from the language used rather than predefined metrics. Then, score each worldview on these concepts based on how strongly they emphasize or relate to each concept (0-100). Return valid JSON data with a 'metrics' array (containing the concept names) and a 'scores' object mapping each worldview to its scores.`],
   ]);
 
   return RunnableSequence.from([
