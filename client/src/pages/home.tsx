@@ -123,15 +123,15 @@ export default function Home() {
   };
   
   return (
-    <div>
+    <div className="bg-pattern min-h-screen pb-8">
       <main className="container mx-auto px-4 py-6 flex-grow">
-        <h1 className="text-3xl font-bold text-center mb-6">Welcome to Religious Gurus</h1>
-        <p className="text-center text-lg mb-6 max-w-3xl mx-auto">
+        <h1 className="text-3xl font-bold text-center mb-4 bg-gradient-to-r from-teal-600 to-blue-500 text-transparent bg-clip-text">Welcome to Religious Gurus</h1>
+        <p className="text-center text-lg mb-8 max-w-3xl mx-auto text-slate-700">
           Enter a topic or question to explore how different worldviews interpret it.
         </p>
         
         {/* Mobile Form (Visible only on mobile) */}
-        <div className="block lg:hidden mb-6">
+        <div className="block lg:hidden mb-6 shadow-card rounded-lg overflow-hidden hover-scale transition-all-smooth">
           <TopicForm
             topics={topics}
             onSubmit={handleTopicSubmit}
@@ -144,14 +144,16 @@ export default function Home() {
           {/* Left Column (Input and History) - Only visible on desktop */}
           <div className="hidden lg:block lg:col-span-1">
             <div className="sticky top-4"> {/* Make the left sidebar sticky on desktop */}
-              <TopicForm
-                topics={topics}
-                onSubmit={handleTopicSubmit}
-                onSelectTopic={handleSelectTopic}
-                isLoading={isLoading}
-              />
+              <div className="shadow-card rounded-lg overflow-hidden hover-scale transition-all-smooth">
+                <TopicForm
+                  topics={topics}
+                  onSubmit={handleTopicSubmit}
+                  onSelectTopic={handleSelectTopic}
+                  isLoading={isLoading}
+                />
+              </div>
               
-              <div className="mt-6"> {/* History panel for desktop */}
+              <div className="mt-6 shadow-card rounded-lg overflow-hidden transition-all-smooth"> {/* History panel for desktop */}
                 <HistoryPanel
                   topics={topics}
                   onSelectTopic={handleSelectTopic}
@@ -164,17 +166,21 @@ export default function Home() {
           
           {/* Right Column (Results) */}
           <div className="lg:col-span-2">
-            <ResultsPanel
-              data={currentTopicResponse}
-              isLoading={isLoading}
-            />
+            <div className="gradient-card shadow-card rounded-lg transition-all-smooth">
+              <ResultsPanel
+                data={currentTopicResponse}
+                isLoading={isLoading}
+              />
+            </div>
             
-            <MediaGallery />
+            <div className="mt-6 shadow-card rounded-lg transition-all-smooth">
+              <MediaGallery />
+            </div>
           </div>
         </div>
         
         {/* Mobile History Panel (Visible only on mobile, below results) */}
-        <div className="block lg:hidden mt-6">
+        <div className="block lg:hidden mt-6 shadow-card rounded-lg overflow-hidden transition-all-smooth">
           <HistoryPanel
             topics={topics}
             onSelectTopic={handleSelectTopic}

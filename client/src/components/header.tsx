@@ -16,18 +16,18 @@ export default function Header() {
   };
   
   return (
-    <header className="bg-teal-700 shadow-md text-white">
+    <header className="gradient-teal shadow-lg text-white">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         {/* Logo - same on mobile and desktop */}
-        <div className="flex items-center space-x-3" onClick={() => window.location.href = "/"} style={{cursor: "pointer"}}>
-          <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center shadow-md overflow-hidden">
+        <div className="flex items-center space-x-3 transition-all-smooth" onClick={() => window.location.href = "/"} style={{cursor: "pointer"}}>
+          <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center shadow-card overflow-hidden hover-scale">
             <GuruLogo className="w-full h-full" />
           </div>
           <div>
             <h1 className="text-lg md:text-2xl font-bold text-white">
               Religious Gurus
             </h1>
-            <p className="text-xs text-teal-100 hidden md:block">Exploring worldviews through AI</p>
+            <p className="text-xs text-teal-50 hidden md:block">Exploring worldviews through AI</p>
           </div>
         </div>
         
@@ -36,7 +36,7 @@ export default function Header() {
           <Link href="/">
             <Button
               variant={isHomePage ? "default" : "ghost"}
-              className="items-center space-x-1 text-white hover:bg-teal-600"
+              className="items-center space-x-1 text-white hover:bg-teal-600 transition-all-smooth"
             >
               <Home className="h-4 w-4" />
               <span>Home</span>
@@ -46,7 +46,7 @@ export default function Header() {
           <Link href="/about">
             <Button
               variant={isAboutPage ? "default" : "ghost"}
-              className="items-center space-x-1 text-white hover:bg-teal-600"
+              className="items-center space-x-1 text-white hover:bg-teal-600 transition-all-smooth"
             >
               <InfoIcon className="h-4 w-4" />
               <span>About</span>
@@ -56,7 +56,7 @@ export default function Header() {
           <Link href="/chat">
             <Button
               variant={isChatPage ? "default" : "ghost"}
-              className="items-center space-x-1 text-white hover:bg-teal-600"
+              className="items-center space-x-1 text-white hover:bg-teal-600 transition-all-smooth"
             >
               <MessageCircle className="h-4 w-4" />
               <span>Chat</span>
@@ -66,7 +66,7 @@ export default function Header() {
           <a href="https://github.com/hhanspal/ReligiousGurus" target="_blank" rel="noopener noreferrer">
             <Button
               variant="ghost"
-              className="items-center space-x-1 text-white hover:bg-teal-600"
+              className="items-center space-x-1 text-white hover:bg-teal-600 transition-all-smooth"
             >
               <Github className="h-4 w-4" />
               <span>GitHub</span>
