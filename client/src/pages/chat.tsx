@@ -44,6 +44,8 @@ export default function Chat() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isCreatingSession, setIsCreatingSession] = useState<boolean>(false);
   const [newSessionWorldview, setNewSessionWorldview] = useState<string>(WorldView.CHRISTIANITY);
+  const [selectedWorldviews, setSelectedWorldviews] = useState<string[]>([]);
+  const [isGroupChatMode, setIsGroupChatMode] = useState<boolean>(false);
   const [newSessionTitle, setNewSessionTitle] = useState<string>("");
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState<boolean>(false);
   const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
@@ -75,12 +77,16 @@ export default function Chat() {
   
   // Create session mutation
   const createSessionMutation = useMutation({
-    mutationFn: createChatSession,
+    mutationFn: (data: { worldview: string, worldviews?: string[], isGroupChat?: boolean, title: string }) => {
+      return createChatSession(data);
+    },
     onSuccess: (newSession) => {
       queryClient.invalidateQueries({ queryKey: ['/api/chat/sessions'] });
       setSessionId(newSession.id);
       setIsCreatingSession(false);
       setNewSessionTitle("");
+      setSelectedWorldviews([]);
+      setIsGroupChatMode(false);
     },
     onError: (error) => {
       toast({
@@ -283,11 +289,36 @@ export default function Chat() {
     );
   };
 
-  // Handler for quick chat start
+  // Handler for quick chat start (single worldview)
   const handleQuickChat = (worldview: WorldView) => {
     const title = `Chat with ${getWorldViewName(worldview)}`;
     createSessionMutation.mutate({
       worldview,
+      worldviews: [worldview],
+      isGroupChat: false,
+      title,
+    });
+  };
+  
+  // Handler for creating a group chat with multiple worldviews
+  const handleCreateGroupChat = () => {
+    if (selectedWorldviews.length === 0) {
+      toast({
+        title: 'Error',
+        description: 'Please select at least one worldview for your group chat',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    // Set the primary worldview to the first selected one (for backward compatibility)
+    const primaryWorldview = selectedWorldviews[0];
+    const title = newSessionTitle || `Group Chat with ${selectedWorldviews.length} Worldviews`;
+    
+    createSessionMutation.mutate({
+      worldview: primaryWorldview,
+      worldviews: selectedWorldviews,
+      isGroupChat: true,
       title,
     });
   };

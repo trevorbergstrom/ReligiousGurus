@@ -86,13 +86,17 @@ export type WorldViewComparison = {
 // Chat session schema
 export const chatSessions = pgTable("chat_sessions", {
   id: uuid("id").primaryKey().defaultRandom(),
-  worldview: text("worldview").notNull(),
+  worldview: text("worldview").notNull(), // Main worldview (for backward compatibility)
+  worldviews: text("worldviews").array().notNull().default([]), // Array of worldviews for group chats
+  isGroupChat: boolean("is_group_chat").default(false).notNull(),
   title: text("title").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
 export const insertChatSessionSchema = createInsertSchema(chatSessions).pick({
   worldview: true,
+  worldviews: true,
+  isGroupChat: true,
   title: true
 });
 
