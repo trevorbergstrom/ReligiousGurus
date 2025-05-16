@@ -671,7 +671,7 @@ export class LangGraphCoordinator {
   
   async processTopic(
     topic: string, 
-    modelId: string = AIModel.GEMMA_3_1B, // Prioritize Hugging Face model
+    modelId: string = DEFAULT_HUGGINGFACE_MODEL, // Use Llama as default
     provider: string = ModelProvider.HUGGINGFACE // Prioritize Hugging Face provider
   ): Promise<{
     summary: string;
