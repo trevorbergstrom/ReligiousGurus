@@ -23,6 +23,11 @@ export const fetchResponse = async (topicId: number): Promise<TopicResponsePair>
   return await response.json();
 };
 
+// Delete a topic
+export const deleteTopic = async (topicId: number): Promise<void> => {
+  await apiRequest("DELETE", `/api/topics/${topicId}`);
+};
+
 // Chat API functions
 
 // Fetch all chat sessions
@@ -42,6 +47,11 @@ export const fetchChatSession = async (sessionId: string): Promise<ChatSession> 
 export const createChatSession = async (data: { worldview: string; title: string }): Promise<ChatSession> => {
   const response = await apiRequest("POST", `/api/chat/sessions`, data);
   return await response.json();
+};
+
+// Delete a chat session
+export const deleteChatSession = async (sessionId: string): Promise<void> => {
+  await apiRequest("DELETE", `/api/chat/sessions/${sessionId}`);
 };
 
 // Fetch messages for a chat session

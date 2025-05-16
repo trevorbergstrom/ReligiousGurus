@@ -25,20 +25,24 @@ export interface IStorage {
   getTopic(id: number): Promise<Topic | undefined>;
   getAllTopics(): Promise<Topic[]>;
   searchTopics(query: string): Promise<Topic[]>;
+  deleteTopic(id: number): Promise<void>;
   
   // Response operations
   createResponse(response: InsertResponse): Promise<Response>;
   getResponseByTopicId(topicId: number): Promise<Response | undefined>;
+  deleteResponse(topicId: number): Promise<void>;
   
   // Chat operations
   createChatSession(session: InsertChatSession): Promise<ChatSession>;
   getChatSession(id: string): Promise<ChatSession | undefined>;
   getChatSessionsByWorldview(worldview: string): Promise<ChatSession[]>;
   getAllChatSessions(): Promise<ChatSession[]>;
+  deleteChatSession(id: string): Promise<void>;
   
   // Chat messages
   createChatMessage(message: InsertChatMessage): Promise<ChatMessage>;
   getChatMessagesBySessionId(sessionId: string): Promise<ChatMessage[]>;
+  deleteChatMessagesBySessionId(sessionId: string): Promise<void>;
 }
 
 // Database implementation of the storage interface
@@ -79,6 +83,16 @@ export class DatabaseStorage implements IStorage {
       .where(ilike(topics.content, searchTerm))
       .orderBy(desc(topics.createdAt));
   }
+  
+  async deleteTopic(id: number): Promise<void> {
+    // Delete the associated response first due to foreign key constraints
+    await this.deleteResponse(id);
+    
+    // Then delete the topic
+    await db
+      .delete(topics)
+      .where(eq(topics.id, id));
+  }
 
   // Response operations
   async createResponse(insertResponse: InsertResponse): Promise<Response> {
@@ -95,6 +109,12 @@ export class DatabaseStorage implements IStorage {
       .from(responses)
       .where(eq(responses.topicId, topicId));
     return response;
+  }
+  
+  async deleteResponse(topicId: number): Promise<void> {
+    await db
+      .delete(responses)
+      .where(eq(responses.topicId, topicId));
   }
   
   // Chat operations
@@ -129,6 +149,16 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(chatSessions.createdAt));
   }
   
+  async deleteChatSession(id: string): Promise<void> {
+    // Delete all messages in the session first
+    await this.deleteChatMessagesBySessionId(id);
+    
+    // Then delete the session
+    await db
+      .delete(chatSessions)
+      .where(eq(chatSessions.id, id));
+  }
+  
   // Chat messages
   async createChatMessage(insertMessage: InsertChatMessage): Promise<ChatMessage> {
     const [message] = await db
@@ -144,6 +174,12 @@ export class DatabaseStorage implements IStorage {
       .from(chatMessages)
       .where(eq(chatMessages.sessionId, sessionId))
       .orderBy(chatMessages.createdAt);
+  }
+  
+  async deleteChatMessagesBySessionId(sessionId: string): Promise<void> {
+    await db
+      .delete(chatMessages)
+      .where(eq(chatMessages.sessionId, sessionId));
   }
 }
 
