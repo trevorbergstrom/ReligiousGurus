@@ -110,33 +110,33 @@ const createExpertAgent = (worldview: WorldView) => {
 
 // Create a summary generator that uses the selected model
 const createSummaryGenerator = (state: AgentState) => {
-  const summaryPrompt = ChatPromptTemplate.fromMessages([
-    ["system", "You are a neutral comparative religion expert. Synthesize the provided worldview responses into a coherent summary paragraph that highlights similarities and differences without bias."],
-    ["user", `Topic: "{topic}"\n\nWorldview responses:\n{expertResponsesText}\n\nCreate a neutral summary paragraph highlighting the similarities and differences between these worldviews on this topic.`],
-  ]);
-
+  // Common system prompt
+  const systemPromptText = "You are a neutral comparative religion expert. Synthesize the provided worldview responses into a coherent summary paragraph that highlights similarities and differences without bias.";
+  
   if (state.provider === ModelProvider.HUGGINGFACE) {
-    // For Hugging Face models
-    return RunnableSequence.from([
-      async (input: { topic: string, expertResponsesText: string }) => {
-        const systemPrompt = "You are a neutral comparative religion expert. Synthesize the provided worldview responses into a coherent summary paragraph that highlights similarities and differences without bias.";
-        const userPrompt = `Topic: "${input.topic}"\n\nWorldview responses:\n${input.expertResponsesText}\n\nCreate a neutral summary paragraph highlighting the similarities and differences between these worldviews on this topic.`;
-        
-        try {
-          const response = await generateTextWithHuggingFace(
-            state.model as HuggingFaceModels,
-            userPrompt,
-            systemPrompt
-          );
-          return response;
-        } catch (error) {
-          console.error("Error generating summary with Hugging Face:", error);
-          return "Error: Failed to generate a comparative summary using Hugging Face.";
-        }
-      },
-    ]);
+    // For Hugging Face models - return a function that directly calls the HF API
+    return async (input: { topic: string, expertResponsesText: string }): Promise<string> => {
+      const userPromptText = `Topic: "${input.topic}"\n\nWorldview responses:\n${input.expertResponsesText}\n\nCreate a neutral summary paragraph highlighting the similarities and differences between these worldviews on this topic.`;
+      
+      try {
+        const response = await generateTextWithHuggingFace(
+          state.model as HuggingFaceModels,
+          userPromptText,
+          systemPromptText
+        );
+        return response;
+      } catch (error) {
+        console.error("Error generating summary with Hugging Face:", error);
+        return "Error: Failed to generate a comparative summary using Hugging Face.";
+      }
+    };
   } else {
-    // For OpenAI
+    // For OpenAI - use LangChain runnable
+    const summaryPrompt = ChatPromptTemplate.fromMessages([
+      ["system", systemPromptText],
+      ["user", `Topic: "{topic}"\n\nWorldview responses:\n{expertResponsesText}\n\nCreate a neutral summary paragraph highlighting the similarities and differences between these worldviews on this topic.`],
+    ]);
+    
     const customModel = new ChatOpenAI({
       modelName: state.model,
       temperature: 0,
@@ -262,15 +262,23 @@ const nodes = {
   collectExpertResponses: async (state: AgentState): Promise<AgentState> => {
     try {
       // Create a map of expert agents for each worldview
-      const expertAgents: Record<WorldView, ReturnType<typeof createExpertAgent>> = {} as any;
+      const expertAgents: Record<WorldView, any> = {} as any;
       for (const worldview of Object.values(WorldView)) {
-        expertAgents[worldview] = createExpertAgent(worldview);
+        const expertAgentFn = createExpertAgent(worldview)(state);
+        expertAgents[worldview] = expertAgentFn;
       }
       
       // Run all expert agents in parallel
-      const expertPromises = Object.entries(expertAgents).map(async ([worldview, agent]) => {
+      const expertPromises = Object.entries(expertAgents).map(async ([worldview, agentFn]) => {
         try {
-          const response = await agent.invoke({ topic: state.topic });
+          let response;
+          if (state.provider === ModelProvider.HUGGINGFACE) {
+            // Direct function call for Hugging Face
+            response = await agentFn({ topic: state.topic });
+          } else {
+            // RunnableSequence invoke for OpenAI
+            response = await agentFn.invoke({ topic: state.topic });
+          }
           return { worldview, response, error: null };
         } catch (error) {
           console.error(`Error with ${worldview} expert:`, error);
