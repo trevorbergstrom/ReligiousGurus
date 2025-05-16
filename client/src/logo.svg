@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
   <rect width="512" height="512" rx="100" fill="#0d9488"/>
-  <path d="M256 96C209.9 96 172 133.9 172 180C172 210.6 188.3 237.3 212.6 252C176.1 268.8 152 307.3 152 352H172C172 308.9 206.9 274 250 274H262C305.1 274 340 308.9 340 352H360C360 307.3 335.9 268.8 299.4 252C323.7 237.3 340 210.6 340 180C340 133.9 302.1 96 256 96ZM256 116C291.1 116 320 144.9 320 180C320 215.1 291.1 244 256 244C220.9 244 192 215.1 192 180C192 144.9 220.9 116 256 116Z" fill="white"/>
-  <path d="M236 370H276V400H236V370Z" fill="white"/>
-  <path d="M236 410H276V440H236V410Z" fill="white"/>
+  <!-- Meditation posture - stylized person sitting cross-legged -->
+  <circle cx="256" cy="160" r="70" fill="white" /> <!-- Head -->
+  <path d="M166 320C166 289.1 191.1 264 222 264H290C320.9 264 346 289.1 346 320V350C346 350 306 380 256 380C206 380 166 350 166 350V320Z" fill="white" /> <!-- Body -->
+  <path d="M146 380C146 380 173 410 256 410C339 410 366 380 366 380V420C366 420 318 455 256 455C194 455 146 420 146 420V380Z" fill="white" /> <!-- Crossed legs -->
+  
+  <!-- Hands in meditation pose -->
+  <circle cx="190" cy="330" r="15" fill="white" />
+  <circle cx="322" cy="330" r="15" fill="white" />
 </svg>
