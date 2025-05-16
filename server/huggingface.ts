@@ -31,23 +31,23 @@ export const MODELS: ModelConfig[] = [
     apiKey: "OPENAI_API_KEY"
   },
   {
-    id: HuggingFaceModels.GEMMA_7B,
-    name: "Gemma 7B",
-    description: "Google's instruction-tuned language model",
+    id: HuggingFaceModels.GEMMA_3_1B,
+    name: "Gemma 3 (1B)",
+    description: "Google's compact instruction model",
     provider: "huggingface",
     apiKey: "HUGGINGFACE_API_KEY"
   },
   {
-    id: HuggingFaceModels.ZEPHYR,
-    name: "Zephyr 7B",
-    description: "Refined model with strong instruction following",
+    id: HuggingFaceModels.LLAMA_3_1B,
+    name: "Llama 3.2 (1B)",
+    description: "Meta's compact instruction model",
     provider: "huggingface",
     apiKey: "HUGGINGFACE_API_KEY"
   },
   {
-    id: HuggingFaceModels.FLAN_T5,
-    name: "Flan-T5",
-    description: "Google's instruction-tuned T5 model",
+    id: HuggingFaceModels.QWEN_7B,
+    name: "Qwen 2.5 (7B)",
+    description: "Efficient instruction-following model",
     provider: "huggingface",
     apiKey: "HUGGINGFACE_API_KEY"
   }
