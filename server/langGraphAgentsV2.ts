@@ -295,10 +295,8 @@ const nodes = {
         };
       });
       
-      const chartData: ChartData = {
-        labels: labels.map(formatWorldviewName),
-        datasets
-      };
+      // Use our chart helper to sanitize and standardize the data
+      const chartData: ChartData = sanitizeChartData(chartJson);
       
       return {
         ...state,
