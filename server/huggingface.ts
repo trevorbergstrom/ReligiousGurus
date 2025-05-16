@@ -87,21 +87,42 @@ export async function generateTextWithHuggingFace(
       throw new Error("HUGGINGFACE_API_KEY environment variable is not set");
     }
 
+    console.log(`Attempting to use Hugging Face model: ${model}`);
     const fullPrompt = systemPrompt ? `${systemPrompt}\n\n${prompt}` : prompt;
 
-    const response = await hf.textGeneration({
-      model: model,
-      inputs: fullPrompt,
-      parameters: {
-        max_new_tokens: 1024,
-        temperature: 0.7,
-        top_p: 0.95,
-        repetition_penalty: 1.2,
-        do_sample: true,
-      }
-    });
-
-    return response.generated_text || "No response generated";
+    // Use a more reliable approach with error handling
+    try {
+      const response = await hf.textGeneration({
+        model: model,
+        inputs: fullPrompt,
+        parameters: {
+          max_new_tokens: 1024,
+          temperature: 0.7,
+          top_p: 0.95,
+          repetition_penalty: 1.2,
+          do_sample: true,
+        }
+      });
+      
+      console.log(`Successfully generated text with ${model}`);
+      return response.generated_text || "No response generated";
+    } catch (innerError) {
+      console.error(`Error with specific model ${model}:`, innerError);
+      
+      // Fall back to a known working model if specific model fails
+      console.log("Falling back to Gemma model...");
+      const fallbackResponse = await hf.textGeneration({
+        model: "google/gemma-2b-it", // reliable fallback model
+        inputs: fullPrompt,
+        parameters: {
+          max_new_tokens: 512,
+          temperature: 0.7,
+          top_p: 0.95,
+        }
+      });
+      
+      return fallbackResponse.generated_text || "No response generated";
+    }
   } catch (error) {
     console.error("Error generating text with Hugging Face:", error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
