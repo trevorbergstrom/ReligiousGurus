@@ -1,3 +1,11 @@
+/**
+ * Religious Gurus - Comparative Worldview Explorer
+ * Copyright (c) 2025 Religious Gurus Project
+ * 
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 import { pgTable, text, serial, integer, boolean, timestamp, jsonb, uuid } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";

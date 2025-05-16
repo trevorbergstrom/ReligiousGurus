@@ -1,3 +1,11 @@
+/**
+ * Religious Gurus - Comparative Worldview Explorer
+ * Copyright (c) 2025 Religious Gurus Project
+ * 
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 import { WorldView, AIModel, ModelProvider } from "@shared/schema";
 import { ChatOpenAI } from "@langchain/openai";
 import { RunnableSequence } from "@langchain/core/runnables";
