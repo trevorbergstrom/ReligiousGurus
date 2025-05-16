@@ -1,8 +1,9 @@
-import { WorldView } from "@shared/schema";
+import { WorldView, AIModel, ModelProvider } from "@shared/schema";
 import { ChatOpenAI } from "@langchain/openai";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
+import { generateTextWithHuggingFace, HuggingFaceModels } from "./huggingface";
 
 // The newest OpenAI model is "gpt-4o" which was released May 13, 2024
 const OPENAI_MODEL = "gpt-4o";
@@ -117,14 +118,42 @@ Respond conversationally while staying true to ${worldview} perspectives. Keep r
   let chatModel = model; // default to the predefined model
   
   // If specific model requested and available, use it
+  // For Hugging Face models, we need to handle them differently
+  // since they aren't directly compatible with LangChain's structure
   if (modelId && provider) {
     if (provider === 'openai') {
       chatModel = new ChatOpenAI({
         modelName: modelId,
         temperature: 0.7,
       });
+    } else if (provider === 'huggingface') {
+      // Instead of returning a RunnableSequence, we'll create a custom function
+      // that will use our Hugging Face integration directly
+      return async ({ context, history, userMessage }: any) => {
+        try {
+          const systemPrompt = `You are an educational expert on ${worldview}. ${worldviewSpecificInstructions}
+            Always provide factual, balanced, and educational responses about ${worldview}.
+            
+            Context information about this conversation:
+            ${context}
+            
+            ${history ? `Conversation history: ${history}` : ''}
+            
+            Respond conversationally while staying true to ${worldview} perspectives.
+            Keep responses concise (1-3 paragraphs) and avoid unnecessarily formal academic language.`;
+            
+          // Use our Hugging Face integration
+          return await generateTextWithHuggingFace(
+            modelId as HuggingFaceModels,
+            userMessage,
+            systemPrompt
+          );
+        } catch (error) {
+          console.error(`Error using Hugging Face model for ${worldview}:`, error);
+          return `I apologize, but I'm having trouble processing your request about ${worldview} with the selected model. Could you try a different model or try again later?`;
+        }
+      };
     }
-    // Future enhancement: Add support for Hugging Face models here
   }
   
   return RunnableSequence.from([
