@@ -14,6 +14,13 @@ const model = new ChatOpenAI({
   temperature: 0.7, // Slightly higher temperature for more varied responses in chat
 });
 
+// Response type for the chat agent to indicate which model was actually used
+interface ChatResponse {
+  content: string;
+  actualModel: string;
+  actualProvider: string;
+}
+
 // Create a chat agent for each worldview
 export class WorldviewChatAgent {
   private worldview: WorldView;
@@ -38,12 +45,12 @@ export class WorldviewChatAgent {
     }
   }
   
-  // Process a user message and return a response
+  // Process a user message and return a response with model information
   public async processMessage(
     userMessage: string, 
     model?: string, 
     provider?: string
-  ): Promise<string> {
+  ): Promise<ChatResponse> {
     try {
       // If Hugging Face is requested, try it
       if (provider === ModelProvider.HUGGINGFACE && model) {
@@ -61,11 +68,18 @@ export class WorldviewChatAgent {
           Keep responses concise (1-3 paragraphs) and avoid unnecessarily formal academic language.`;
           
           // Directly use Hugging Face
-          return await generateTextWithHuggingFace(
+          const content = await generateTextWithHuggingFace(
             model as HuggingFaceModels,
             userMessage,
             systemPrompt
           );
+          
+          // Return content with Hugging Face model info
+          return {
+            content,
+            actualModel: model,
+            actualProvider: ModelProvider.HUGGINGFACE
+          };
         } catch (error) {
           // If Hugging Face fails, log it and fall back to OpenAI silently
           const errorMessage = error instanceof Error ? error.message : String(error);
@@ -73,13 +87,18 @@ export class WorldviewChatAgent {
           console.log("Falling back to OpenAI model");
           
           // Use default OpenAI fallback
-          const result = await this.chat.invoke({
+          const content = await this.chat.invoke({
             context: this.context,
             history: "",
             userMessage
           });
           
-          return result;
+          // Return with OpenAI fallback information
+          return {
+            content,
+            actualModel: AIModel.GPT_4_O,
+            actualProvider: ModelProvider.OPENAI
+          };
         }
       } 
       // If OpenAI is requested
@@ -108,32 +127,52 @@ export class WorldviewChatAgent {
             new StringOutputParser(),
           ]);
           
-          return await chain.invoke({
+          const content = await chain.invoke({
             userMessage
           });
+          
+          return {
+            content,
+            actualModel: model,
+            actualProvider: ModelProvider.OPENAI
+          };
         } catch (error) {
           console.error(`OpenAI specific model error: ${error}`);
           
           // Fall back to default OpenAI model
-          const result = await this.chat.invoke({
+          const content = await this.chat.invoke({
             context: this.context,
             history: "",
             userMessage
           });
           
-          return result;
+          return {
+            content,
+            actualModel: AIModel.GPT_4_O,
+            actualProvider: ModelProvider.OPENAI
+          };
         }
       }
       
-      // Default: Use the default chat agent
-      return await this.chat.invoke({
+      // Default: Use the default chat agent (OpenAI)
+      const content = await this.chat.invoke({
         context: this.context,
         history: "",
         userMessage
       });
+      
+      return {
+        content,
+        actualModel: AIModel.GPT_4_O,
+        actualProvider: ModelProvider.OPENAI
+      };
     } catch (error) {
       console.error(`Error in ${this.worldview} chat agent:`, error);
-      return `I apologize, but I'm having trouble processing your request about ${this.worldview}. Could you try asking in a different way?`;
+      return {
+        content: `I apologize, but I'm having trouble processing your request about ${this.worldview}. Could you try asking in a different way?`,
+        actualModel: AIModel.GPT_4_O,
+        actualProvider: ModelProvider.OPENAI
+      };
     }
   }
 }

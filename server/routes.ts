@@ -346,33 +346,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const requestedModel = req.body.model || AIModel.LLAMA_3_1B;
         const requestedProvider = req.body.provider || ModelProvider.HUGGINGFACE;
         
-        // Process the message using the chat agent
-        const responseContent = await chatAgent.processMessage(
+        // Process the message using the chat agent - new response format includes model information
+        const response = await chatAgent.processMessage(
           userMessage.content,
           requestedModel,
           requestedProvider
         );
         
-        // For transparency, use the model that was actually used
-        let actualModel = requestedModel;
-        let actualProvider = requestedProvider;
-        
-        // If the Hugging Face models are having issues, note the fallback to OpenAI
-        if (requestedProvider === ModelProvider.HUGGINGFACE && 
-            responseContent.includes("apologize") && 
-            responseContent.includes("trouble")) {
-          console.log("Detected error in Hugging Face response, recording as OpenAI fallback");
-          actualModel = AIModel.GPT_4_O;
-          actualProvider = ModelProvider.OPENAI;
-        }
+        // Log the model that was actually used
+        console.log(`Message processed with: ${response.actualProvider} model ${response.actualModel}`);
         
         // Save the AI response with the correct model information
         const aiMessage = await storage.createChatMessage({
           sessionId: sessionId,
-          content: responseContent,
+          content: response.content,
           isUser: false,
-          model: actualModel,
-          provider: actualProvider
+          model: response.actualModel,
+          provider: response.actualProvider
         });
         
         // Return both messages
