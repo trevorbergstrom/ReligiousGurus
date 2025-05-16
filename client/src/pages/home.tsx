@@ -124,25 +124,15 @@ export default function Home() {
   return (
     <div className="bg-clean min-h-screen pb-8">
       <main className="container mx-auto px-4 py-6 flex-grow">
-        <h1 className="text-3xl font-bold text-center mb-4 bg-gradient-to-r from-teal-600 to-blue-500 text-transparent bg-clip-text">Welcome to Religious Gurus</h1>
-        <p className="text-center text-lg mb-8 max-w-3xl mx-auto text-slate-700">
-          Enter a topic or question to explore how different worldviews interpret it.
+        <h1 className="text-4xl font-bold text-center mb-4 bg-gradient-to-r from-teal-600 to-blue-500 text-transparent bg-clip-text">Religious Gurus</h1>
+        <p className="text-center text-lg mb-8 max-w-2xl mx-auto text-slate-700">
+          Explore how different worldviews interpret life's big questions
         </p>
         
-        {/* Mobile Form (Visible only on mobile) */}
-        <div className="block lg:hidden mb-6 shadow-card rounded-lg overflow-hidden hover-scale transition-all-smooth">
-          <TopicForm
-            topics={topics}
-            onSubmit={handleTopicSubmit}
-            onSelectTopic={handleSelectTopic}
-            isLoading={isLoading}
-          />
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column (Input and History) - Only visible on desktop */}
-          <div className="hidden lg:block lg:col-span-1">
-            <div className="sticky top-4"> {/* Make the left sidebar sticky on desktop */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Left Column (Input) - Consistent on mobile & desktop for better UX */}
+          <div className="lg:col-span-4 order-1">
+            <div className="lg:sticky lg:top-4">
               <div className="shadow-card rounded-lg overflow-hidden hover-scale transition-all-smooth">
                 <TopicForm
                   topics={topics}
@@ -152,7 +142,8 @@ export default function Home() {
                 />
               </div>
               
-              <div className="mt-6 shadow-card rounded-lg overflow-hidden transition-all-smooth"> {/* History panel for desktop */}
+              {/* History panel for desktop - after input but before results on desktop */}
+              <div className="hidden lg:block mt-6 shadow-card rounded-lg overflow-hidden transition-all-smooth">
                 <HistoryPanel
                   topics={topics}
                   onSelectTopic={handleSelectTopic}
@@ -164,7 +155,7 @@ export default function Home() {
           </div>
           
           {/* Right Column (Results) */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-8 order-2">
             <div className="gradient-card shadow-card rounded-lg transition-all-smooth">
               <ResultsPanel
                 data={currentTopicResponse}
@@ -178,8 +169,8 @@ export default function Home() {
           </div>
         </div>
         
-        {/* Mobile History Panel (Visible only on mobile, below results) */}
-        <div className="block lg:hidden mt-6 shadow-card rounded-lg overflow-hidden transition-all-smooth">
+        {/* Mobile History Panel - Now places after results for mobile priority */}
+        <div className="block lg:hidden mt-6 shadow-card rounded-lg overflow-hidden transition-all-smooth order-3">
           <HistoryPanel
             topics={topics}
             onSelectTopic={handleSelectTopic}
