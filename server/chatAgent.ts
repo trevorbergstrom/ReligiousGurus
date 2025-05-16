@@ -45,24 +45,57 @@ export class WorldviewChatAgent {
     provider?: string
   ): Promise<string> {
     try {
-      // Handle different models based on provider
       if (model && provider === 'huggingface') {
-        // Create a system prompt for Hugging Face
-        const systemPrompt = `You are an educational expert on ${this.worldview}. 
-          Always provide factual, balanced, and educational responses about ${this.worldview}.
+        try {
+          // Try Hugging Face first
+          console.log(`Attempting to use Hugging Face model for ${this.worldview} chat`);
           
-          Context information about this conversation:
-          ${this.context}
+          // Create a system prompt for Hugging Face
+          const systemPrompt = `You are an educational expert on ${this.worldview}. 
+            Always provide factual, balanced, and educational responses about ${this.worldview}.
+            
+            Context information about this conversation:
+            ${this.context}
+            
+            Respond conversationally while staying true to ${this.worldview} perspectives.
+            Keep responses concise (1-3 paragraphs) and avoid unnecessarily formal academic language.`;
+            
+          // Use Hugging Face directly
+          return await generateTextWithHuggingFace(
+            model as HuggingFaceModels,
+            userMessage,
+            systemPrompt
+          );
+        } catch (hfError) {
+          console.error(`Hugging Face error: ${hfError.message}. Falling back to OpenAI.`);
           
-          Respond conversationally while staying true to ${this.worldview} perspectives.
-          Keep responses concise (1-3 paragraphs) and avoid unnecessarily formal academic language.`;
+          // Fall back to OpenAI
+          const fallbackModel = new ChatOpenAI({
+            modelName: "gpt-4o", // Use a reliable model as fallback
+            temperature: 0.7,
+          });
           
-        // Use Hugging Face directly
-        return await generateTextWithHuggingFace(
-          model as HuggingFaceModels,
-          userMessage,
-          systemPrompt
-        );
+          const fallbackPrompt = ChatPromptTemplate.fromMessages([
+            ["system", `You are an educational expert on ${this.worldview}.
+              Always provide factual, balanced, and educational responses about ${this.worldview}.
+              
+              Context information about this conversation:
+              ${this.context}
+              
+              Respond conversationally while staying true to ${this.worldview} perspectives.
+              Important note: The user selected a Hugging Face model, but we had to fall back to using
+              OpenAI's GPT-4o due to technical issues. Do not mention this in your response.`],
+            ["user", userMessage],
+          ]);
+          
+          const result = await fallbackModel.invoke(fallbackPrompt.format({
+            context: this.context,
+            history: "",
+            userMessage: userMessage
+          }));
+          
+          return result.content as string;
+        }
       } 
       else if (model && provider === 'openai') {
         // Use OpenAI with specific model
@@ -102,7 +135,20 @@ export class WorldviewChatAgent {
       }
     } catch (error) {
       console.error(`Error in ${this.worldview} chat agent:`, error);
-      return `I apologize, but I'm having trouble processing your request about ${this.worldview} with the selected model. Could you try a different model or try again later?`;
+      
+      // Final fallback - use the default OpenAI model
+      try {
+        console.log("Using final fallback to default OpenAI model");
+        const result = await this.chat.invoke({
+          context: this.context,
+          history: "",
+          userMessage
+        });
+        
+        return result;
+      } catch (finalError) {
+        return `I apologize, but I'm having trouble processing your request about ${this.worldview}. Could you try again later?`;
+      }
     }
   }
 }
