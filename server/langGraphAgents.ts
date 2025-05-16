@@ -75,25 +75,23 @@ const createExpertAgent = (worldview: WorldView) => {
 
   return (state: AgentState) => {
     if (state.provider === ModelProvider.HUGGINGFACE) {
-      // For Hugging Face models, use direct API call
-      return RunnableSequence.from([
-        async (input: { topic: string }) => {
-          const systemPrompt = `You are an expert in ${worldview}. Provide a neutral, educational response about the given topic from the perspective of ${worldview}. Use 1-2 concise sentences.`;
-          const userPrompt = `Given the topic "${input.topic}", describe the ${worldview} worldview's stance in 1-2 sentences, using neutral and educational language. Avoid bias or judgment.`;
-          
-          try {
-            const response = await generateTextWithHuggingFace(
-              state.model as HuggingFaceModels,
-              userPrompt,
-              systemPrompt
-            );
-            return response;
-          } catch (error) {
-            console.error(`Error with Hugging Face model for ${worldview}:`, error);
-            return `Error: Failed to get response from ${worldview} perspective using Hugging Face.`;
-          }
-        },
-      ]);
+      // For Hugging Face models, return a function that directly calls the HF API
+      return async (input: { topic: string }): Promise<string> => {
+        const systemPrompt = `You are an expert in ${worldview}. Provide a neutral, educational response about the given topic from the perspective of ${worldview}. Use 1-2 concise sentences.`;
+        const userPrompt = `Given the topic "${input.topic}", describe the ${worldview} worldview's stance in 1-2 sentences, using neutral and educational language. Avoid bias or judgment.`;
+        
+        try {
+          const response = await generateTextWithHuggingFace(
+            state.model as HuggingFaceModels,
+            userPrompt,
+            systemPrompt
+          );
+          return response;
+        } catch (error) {
+          console.error(`Error with Hugging Face model for ${worldview}:`, error);
+          return `Error: Failed to get response from ${worldview} perspective using Hugging Face.`;
+        }
+      };
     } else {
       // For OpenAI, use LangChain
       const customModel = new ChatOpenAI({
@@ -487,10 +485,24 @@ const nodes = {
     try {
       const expertResponsesText = formatExpertResponses(state.expertResponses);
       
-      const comparisonData = await comparisonsGenerator.invoke({
-        topic: state.topic,
-        expertResponsesText
-      }) as ComparisonDataResponse;
+      // Create a comparisons generator with the selected model
+      const comparisonsGen = createComparisonsGenerator(state);
+      let comparisonData: ComparisonDataResponse;
+      
+      if (state.provider === ModelProvider.HUGGINGFACE) {
+        // Direct function call for Hugging Face
+        comparisonData = await comparisonsGen({
+          topic: state.topic,
+          expertResponsesText
+        }) as ComparisonDataResponse;
+      } else {
+        // RunnableSequence invoke for OpenAI
+        const runnable = comparisonsGen as RunnableSequence<any, any>;
+        comparisonData = await runnable.invoke({
+          topic: state.topic,
+          expertResponsesText
+        }) as ComparisonDataResponse;
+      }
       
       // Convert to our schema format with safety checks
       const comparisons: WorldViewComparison[] = [];
