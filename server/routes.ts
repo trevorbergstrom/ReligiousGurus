@@ -8,7 +8,9 @@ import {
   insertTopicSchema, 
   insertChatSessionSchema, 
   insertChatMessageSchema,
-  WorldView
+  WorldView,
+  AIModel,
+  ModelProvider
 } from "@shared/schema";
 import { z } from "zod";
 

@@ -109,6 +109,8 @@ export const chatMessages = pgTable("chat_messages", {
   sessionId: uuid("session_id").notNull().references(() => chatSessions.id),
   content: text("content").notNull(),
   isUser: boolean("is_user").notNull(),
+  model: text("model"),
+  provider: text("provider"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -116,6 +118,8 @@ export const insertChatMessageSchema = createInsertSchema(chatMessages).pick({
   sessionId: true,
   content: true,
   isUser: true,
+  model: true,
+  provider: true,
 });
 
 // Define types for chat

@@ -55,7 +55,8 @@ export class WorldviewChatAgent {
         });
       }
         
-      return await chatAgent.invoke({
+      // Use the default chat agent
+      return await this.chat.invoke({
         context: this.context,
         history: "", // Can be expanded to include conversation history
         userMessage
