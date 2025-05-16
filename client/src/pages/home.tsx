@@ -126,32 +126,39 @@ export default function Home() {
           Enter a topic or question to explore how different worldviews interpret it.
         </p>
         
-        {/* Worldviews Section - More compact and colorful */}
-        <div className="bg-slate-50 rounded-xl p-4 mb-6 max-w-4xl mx-auto">
-          <h2 className="text-lg font-semibold text-center mb-3">Available Worldviews</h2>
-          <div className="flex flex-wrap justify-center gap-2">
-            {Object.values(WorldView).map((worldview) => {
-              const color = getWorldViewColor(worldview as WorldView);
-              return (
-                <div 
-                  key={worldview} 
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full shadow-sm" 
-                  style={{ 
-                    backgroundColor: `${color}15`,
-                    borderWidth: "1px",
-                    borderColor: `${color}50`
-                  }}
-                >
-                  <WorldViewIcon 
-                    worldview={worldview as WorldView} 
-                    size={18} 
-                    className="flex-shrink-0"
-                    style={{ color }}
-                  />
-                  <span className="text-xs font-medium" style={{ color }}>{getWorldViewName(worldview as WorldView)}</span>
+        {/* Quick Topic Suggestions */}
+        <div className="bg-slate-50 rounded-xl p-5 mb-6 max-w-4xl mx-auto">
+          <h2 className="text-lg font-semibold mb-3">Popular Topics to Explore</h2>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+            {[
+              "What happens after death?",
+              "What is the purpose of life?", 
+              "Is there objective morality?",
+              "How should we treat others?",
+              "What is the nature of God?",
+              "What is the soul?",
+            ].map((topic) => (
+              <button
+                key={topic}
+                onClick={() => handleTopicSubmit(topic)}
+                className="bg-white hover:bg-slate-100 text-left p-3 rounded-lg border border-slate-200 shadow-sm transition-colors"
+                disabled={isLoading}
+              >
+                <div className="flex items-center">
+                  <div className="mr-3 text-teal-500 p-1.5 bg-teal-50 rounded-full">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.85.84 6.72 2.28A9 9 0 0 1 21 12Z"></path>
+                      <path d="M9 9h.01"></path>
+                      <path d="M15 9h.01"></path>
+                      <path d="M10 13h4"></path>
+                      <path d="M17 18l-6-3-6 3V13l6-3 6 3v5Z"></path>
+                    </svg>
+                  </div>
+                  <span className="text-sm font-medium text-slate-700">{topic}</span>
                 </div>
-              );
-            })}
+              </button>
+            ))}
           </div>
         </div>
         
