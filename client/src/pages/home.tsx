@@ -126,39 +126,104 @@ export default function Home() {
           Enter a topic or question to explore how different worldviews interpret it.
         </p>
         
-        {/* Quick Topic Suggestions */}
+        {/* Worldview Comparison Examples */}
         <div className="bg-slate-50 rounded-xl p-5 mb-6 max-w-4xl mx-auto">
-          <h2 className="text-lg font-semibold mb-3">Popular Topics to Explore</h2>
+          <h2 className="text-lg font-semibold mb-3">Key Worldview Differences</h2>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-            {[
-              "What happens after death?",
-              "What is the purpose of life?", 
-              "Is there objective morality?",
-              "How should we treat others?",
-              "What is the nature of God?",
-              "What is the soul?",
-            ].map((topic) => (
-              <button
-                key={topic}
-                onClick={() => handleTopicSubmit(topic)}
-                className="bg-white hover:bg-slate-100 text-left p-3 rounded-lg border border-slate-200 shadow-sm transition-colors"
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+            <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
+              <h3 className="font-medium text-teal-600 mb-2 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                  <path d="M12 19V5"></path><path d="M5 12h14"></path>
+                </svg>
+                Afterlife Beliefs
+              </h3>
+              <ul className="text-sm space-y-2 text-slate-700">
+                <li className="flex items-start">
+                  <span className="text-blue-700 font-medium min-w-[90px] mr-1">Christianity:</span>
+                  <span>Heaven, hell, resurrection</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-purple-600 font-medium min-w-[90px] mr-1">Hinduism:</span>
+                  <span>Reincarnation based on karma</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-slate-600 font-medium min-w-[90px] mr-1">Atheism:</span>
+                  <span>No afterlife</span>
+                </li>
+              </ul>
+              <button 
+                onClick={() => handleTopicSubmit("What happens after death?")}
+                className="mt-3 text-xs text-teal-600 hover:text-teal-800 font-medium"
                 disabled={isLoading}
               >
-                <div className="flex items-center">
-                  <div className="mr-3 text-teal-500 p-1.5 bg-teal-50 rounded-full">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.85.84 6.72 2.28A9 9 0 0 1 21 12Z"></path>
-                      <path d="M9 9h.01"></path>
-                      <path d="M15 9h.01"></path>
-                      <path d="M10 13h4"></path>
-                      <path d="M17 18l-6-3-6 3V13l6-3 6 3v5Z"></path>
-                    </svg>
-                  </div>
-                  <span className="text-sm font-medium text-slate-700">{topic}</span>
-                </div>
+                Explore this topic →
               </button>
-            ))}
+            </div>
+            
+            <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
+              <h3 className="font-medium text-teal-600 mb-2 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <circle cx="12" cy="10" r="3"></circle>
+                  <path d="M7 16.3c0-1 1-2 2.5-2.5C11 13.3 12 13 12 13s1-.3 2.5.8c1.5.5 2.5 1.5 2.5 2.5"></path>
+                </svg>
+                Human Nature
+              </h3>
+              <ul className="text-sm space-y-2 text-slate-700">
+                <li className="flex items-start">
+                  <span className="text-teal-500 font-medium min-w-[90px] mr-1">Islam:</span>
+                  <span>Born pure, capable of both good and evil</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-amber-700 font-medium min-w-[90px] mr-1">Buddhism:</span>
+                  <span>No permanent self, suffering from attachment</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-indigo-600 font-medium min-w-[90px] mr-1">Judaism:</span>
+                  <span>Free will to choose good</span>
+                </li>
+              </ul>
+              <button 
+                onClick={() => handleTopicSubmit("What is human nature?")}
+                className="mt-3 text-xs text-teal-600 hover:text-teal-800 font-medium"
+                disabled={isLoading}
+              >
+                Explore this topic →
+              </button>
+            </div>
+            
+            <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
+              <h3 className="font-medium text-teal-600 mb-2 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                  <path d="m2 12 5.25 5 2.625-5L14.5 17l2.625-5 4.875 5"></path>
+                  <path d="M3 4h18"></path>
+                  <path d="M3 20h18"></path>
+                </svg>
+                Meaning of Suffering
+              </h3>
+              <ul className="text-sm space-y-2 text-slate-700">
+                <li className="flex items-start">
+                  <span className="text-blue-700 font-medium min-w-[90px] mr-1">Christianity:</span>
+                  <span>Test of faith, redemptive</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-amber-700 font-medium min-w-[90px] mr-1">Buddhism:</span>
+                  <span>Result of attachment and desire</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-rose-800 font-medium min-w-[90px] mr-1">Sikhism:</span>
+                  <span>Part of God's will, opportunity for growth</span>
+                </li>
+              </ul>
+              <button 
+                onClick={() => handleTopicSubmit("Why do we suffer?")}
+                className="mt-3 text-xs text-teal-600 hover:text-teal-800 font-medium"
+                disabled={isLoading}
+              >
+                Explore this topic →
+              </button>
+            </div>
           </div>
         </div>
         
