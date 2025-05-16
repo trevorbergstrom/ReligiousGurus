@@ -8,10 +8,12 @@ const hf = new HfInference(process.env.HUGGINGFACE_API_KEY);
 
 // Supported models - using publicly available models on Hugging Face
 export enum HuggingFaceModels {
-  GEMMA_3_1B = "google/gemma-3-1b-it",
   LLAMA_3_1B = "meta-llama/Llama-3.2-1B-Instruct",
+  GEMMA_3_1B = "google/gemma-3-1b-it",
   QWEN_7B = "Qwen/Qwen2.5-7B-Instruct",
-  GPT2 = "openai-community/gpt2"
+  MISTRAL_7B = "mistralai/Mistral-7B-Instruct-v0.2", 
+  PHI_2 = "microsoft/phi-2",
+  LLAMA_2_7B = "meta-llama/Llama-2-7b-chat-hf"
 }
 
 export interface ModelConfig {
@@ -31,6 +33,13 @@ export const MODELS: ModelConfig[] = [
     apiKey: "OPENAI_API_KEY"
   },
   {
+    id: HuggingFaceModels.LLAMA_3_1B,
+    name: "Llama 3.2 (1B)",
+    description: "Meta's latest compact instruction model",
+    provider: "huggingface",
+    apiKey: "HUGGINGFACE_API_KEY"
+  },
+  {
     id: HuggingFaceModels.GEMMA_3_1B,
     name: "Gemma 3 (1B)",
     description: "Google's compact instruction model",
@@ -38,16 +47,30 @@ export const MODELS: ModelConfig[] = [
     apiKey: "HUGGINGFACE_API_KEY"
   },
   {
-    id: HuggingFaceModels.LLAMA_3_1B,
-    name: "Llama 3.2 (1B)",
-    description: "Meta's compact instruction model",
+    id: HuggingFaceModels.QWEN_7B,
+    name: "Qwen 2.5 (7B)",
+    description: "Efficient instruction-following model",
     provider: "huggingface",
     apiKey: "HUGGINGFACE_API_KEY"
   },
   {
-    id: HuggingFaceModels.QWEN_7B,
-    name: "Qwen 2.5 (7B)",
-    description: "Efficient instruction-following model",
+    id: HuggingFaceModels.MISTRAL_7B,
+    name: "Mistral (7B)",
+    description: "Advanced instruction-tuned model",
+    provider: "huggingface",
+    apiKey: "HUGGINGFACE_API_KEY"
+  },
+  {
+    id: HuggingFaceModels.PHI_2,
+    name: "Phi-2",
+    description: "Microsoft's compact reasoning model",
+    provider: "huggingface",
+    apiKey: "HUGGINGFACE_API_KEY"
+  },
+  {
+    id: HuggingFaceModels.LLAMA_2_7B,
+    name: "Llama 2 (7B)",
+    description: "Meta's widely-used open model",
     provider: "huggingface",
     apiKey: "HUGGINGFACE_API_KEY"
   }

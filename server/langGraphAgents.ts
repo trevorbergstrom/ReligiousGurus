@@ -16,8 +16,9 @@ import { Tool } from "@langchain/core/tools";
 import { sanitizeChartData, generateDefaultChartData } from "./chartHelper";
 import { generateTextWithHuggingFace, HuggingFaceModels } from "./huggingface";
 
-// Default OpenAI model
+// Default models
 const DEFAULT_OPENAI_MODEL = AIModel.GPT_4_O;
+const DEFAULT_HUGGINGFACE_MODEL = AIModel.LLAMA_3_1B;
 
 // Color scheme for charts
 const CHART_COLORS = {
@@ -658,7 +659,7 @@ export class LangGraphCoordinator {
       expertPrompts: {},
       expertResponses: {},
       processingTimeMs: {},
-      model: AIModel.GEMMA_3_1B, // Prioritize Hugging Face model
+      model: DEFAULT_HUGGINGFACE_MODEL, // Use Llama 3.1B as the default
       provider: ModelProvider.HUGGINGFACE, // Prioritize Hugging Face provider
     };
   }

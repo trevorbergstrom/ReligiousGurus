@@ -50,8 +50,11 @@ export default function ModelSelector({
 }: ModelSelectorProps) {
   const [availableModels, setAvailableModels] = useState<ModelInfo[]>(MODELS);
   
+  // Use Llama 3.2 as the default model if no selection
+  const defaultModel = availableModels.find(model => model.id === AIModel.LLAMA_3_1B) || availableModels[0];
+  
   // Find the selected model's info
-  const selectedModelInfo = availableModels.find(model => model.id === selectedModel) || availableModels[0];
+  const selectedModelInfo = availableModels.find(model => model.id === selectedModel) || defaultModel;
 
   const handleModelChange = (modelId: string) => {
     const model = availableModels.find(m => m.id === modelId);
@@ -84,7 +87,7 @@ export default function ModelSelector({
                       : "text-green-600 bg-green-50 border-green-200"
                   }`}
                 >
-                  {model.provider === ModelProvider.OPENAI ? "OpenAI" : "HF"}
+                  {model.provider === ModelProvider.OPENAI ? "OpenAI" : "Hugging Face"}
                 </Badge>
               </div>
             </SelectItem>
