@@ -160,66 +160,28 @@ export class LangGraphCoordinator {
       // Step 3: Generate chart data
       let chartData: ChartData;
       try {
+        // Request chart data from AI model
         const chartJson = await chartDataGenerator.invoke({
           topic,
           expertResponsesText: responsesText
         }) as ChartDataResponse;
         
-        // Transform to Chart.js format
-        const labels = Object.values(WorldView);
+        // Log the raw chart data for debugging
+        console.log("Chart data received from LLM:", JSON.stringify(chartJson, null, 2));
         
-        // Log the chart data for debugging
-        console.log("Chart data received:", JSON.stringify(chartJson, null, 2));
+        // Use the chart helper to sanitize and format the data
+        // This will handle all edge cases and ensure valid data
+        chartData = sanitizeChartData(chartJson);
         
-        // Process the metrics data - ensure we have arrays for each worldview
-        const datasets = chartJson.metrics.map((metric: string, index: number) => {
-          // Extract data for this metric across all worldviews
-          const data = labels.map(worldview => {
-            const worldviewKey = worldview as string;
-            // Check if scores exist for this worldview
-            if (!chartJson.scores[worldviewKey]) {
-              console.log(`Missing scores for ${worldviewKey}`);
-              return 0; // Default value if missing
-            }
-            
-            // Get the score at this index, or default to 0
-            const score = Array.isArray(chartJson.scores[worldviewKey]) 
-              ? (chartJson.scores[worldviewKey][index] || 0)
-              : 0;
-              
-            return score;
-          });
-          
-          return {
-            label: metric,
-            data,
-            backgroundColor: CHART_COLORS.backgroundColor[index % CHART_COLORS.backgroundColor.length],
-            borderColor: CHART_COLORS.borderColor[index % CHART_COLORS.borderColor.length],
-            borderWidth: 1
-          };
-        });
+        // Additional logging to verify the processed chart data
+        console.log("Processed chart data:", chartData.labels.length, "labels,", 
+                    chartData.datasets.length, "datasets");
         
-        chartData = {
-          labels: labels.map(wv => wv.charAt(0).toUpperCase() + wv.slice(1)),
-          datasets
-        };
       } catch (error) {
+        // If any error occurs, use default chart data
         console.error("Error generating chart data:", error);
-        
-        // Return fallback chart data
-        const labels = Object.values(WorldView).map(wv => wv.charAt(0).toUpperCase() + wv.slice(1));
-        chartData = {
-          labels,
-          datasets: [
-            {
-              label: "Relevance",
-              data: labels.map(() => Math.floor(Math.random() * 100)),
-              backgroundColor: CHART_COLORS.backgroundColor[0],
-              borderColor: CHART_COLORS.borderColor[0],
-              borderWidth: 1
-            }
-          ]
-        };
+        chartData = generateDefaultChartData();
+        console.log("Using default chart data instead");
       }
       
       // Step 4: Generate comparisons

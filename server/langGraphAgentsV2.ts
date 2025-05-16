@@ -13,6 +13,7 @@ import { StringOutputParser } from "@langchain/core/output_parsers";
 import { JsonOutputParser } from "@langchain/core/output_parsers";
 import { StructuredTool } from "@langchain/core/tools";
 import { Tool } from "@langchain/core/tools";
+import { sanitizeChartData, generateDefaultChartData } from "./chartHelper";
 
 // The newest OpenAI model is "gpt-4o" which was released May 13, 2024
 const OPENAI_MODEL = "gpt-4o";
@@ -214,6 +215,7 @@ const nodes = {
     try {
       const expertResponsesText = formatExpertResponses(state.expertResponses);
       
+      // Get chart data from AI model
       const chartJson = await chartDataGenerator.invoke({
         topic: state.topic,
         expertResponsesText
