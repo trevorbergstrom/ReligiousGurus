@@ -54,7 +54,12 @@ export const fetchChatSession = async (sessionId: string): Promise<ChatSession> 
 };
 
 // Create a new chat session
-export const createChatSession = async (data: { worldview: string; title: string }): Promise<ChatSession> => {
+export const createChatSession = async (data: { 
+  worldview: string; 
+  worldviews?: string[]; 
+  isGroupChat?: boolean;
+  title: string 
+}): Promise<ChatSession> => {
   const response = await apiRequest("POST", `/api/chat/sessions`, data);
   return await response.json();
 };
