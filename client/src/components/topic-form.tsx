@@ -112,7 +112,7 @@ export default function TopicForm({ topics, onSubmit, onSelectTopic, isLoading }
             
             <Button
               type="submit"
-              className="w-full bg-primary-600 hover:bg-primary-700 text-white font-medium py-3 px-4 rounded-lg transition-colors text-lg shadow-md"
+              className="w-full bg-teal-700 hover:bg-teal-800 text-white font-medium py-3 px-4 rounded-lg transition-colors text-lg shadow-md"
               disabled={isLoading}
             >
               {isLoading ? (

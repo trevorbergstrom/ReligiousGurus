@@ -54,21 +54,21 @@ export function getWorldViewName(worldview: WorldView): string {
 export function getWorldViewColor(worldview: WorldView): string {
   switch (worldview) {
     case WorldView.ATHEISM:
-      return "rgb(71, 85, 105)"; // slate-600
+      return "rgb(71, 85, 105)"; // slate-600 - cool gray for rational thinking
     case WorldView.AGNOSTICISM:
-      return "rgb(71, 85, 105)"; // slate-600
+      return "rgb(113, 113, 122)"; // zinc-500 - neutral gray for uncertainty
     case WorldView.CHRISTIANITY:
-      return "rgb(29, 78, 216)"; // blue-700
+      return "rgb(29, 78, 216)"; // blue-700 - deep blue for faith and divinity
     case WorldView.ISLAM:
-      return "rgb(16, 185, 129)"; // emerald-500
+      return "rgb(20, 184, 166)"; // teal-500 - serene teal for peace
     case WorldView.HINDUISM:
-      return "rgb(217, 70, 239)"; // fuchsia-500
+      return "rgb(147, 51, 234)"; // purple-600 - rich purple for spiritual enlightenment
     case WorldView.BUDDHISM:
-      return "rgb(245, 158, 11)"; // amber-500
+      return "rgb(180, 83, 9)"; // amber-700 - warm amber for enlightenment
     case WorldView.JUDAISM:
-      return "rgb(79, 70, 229)"; // indigo-600
+      return "rgb(79, 70, 229)"; // indigo-600 - deep indigo for covenant and wisdom
     case WorldView.SIKHISM:
-      return "rgb(234, 88, 12)"; // orange-600
+      return "rgb(159, 18, 57)"; // rose-800 - deep rose for devotion and service
     default:
       return "rgb(71, 85, 105)"; // slate-600
   }
