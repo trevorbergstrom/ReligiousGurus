@@ -394,12 +394,10 @@ const nodes = {
 // No graph creation needed - we'll use a simpler sequential approach
 const worldviewGraph = null;
 
-// Create a coordinator agent class that uses the LangGraph
+// Create a coordinator agent class that executes the nodes sequentially
 export class LangGraphCoordinator {
-  private graph: any;
-  
   constructor() {
-    this.graph = worldviewGraph;
+    // No initialization needed
   }
   
   async processTopic(topic: string): Promise<{
@@ -409,17 +407,30 @@ export class LangGraphCoordinator {
   }> {
     try {
       // Initialize the state
-      const initialState: AgentState = {
+      let state: AgentState = {
         topic,
         expertResponses: {},
       };
       
-      // Execute the graph
-      const result = await this.graph.invoke(initialState);
+      // Execute the nodes sequentially
+      console.log("Processing topic:", topic);
       
+      // Step 1: Collect expert responses
+      state = await nodes.collectExpertResponses(state);
+      
+      // Step 2: Generate summary
+      state = await nodes.generateSummary(state);
+      
+      // Step 3: Generate chart data
+      state = await nodes.generateChartData(state);
+      
+      // Step 4: Generate comparisons
+      state = await nodes.generateComparisons(state);
+      
+      // Return the final result
       return {
-        summary: result.summary || "Unable to generate summary.",
-        chartData: result.chartData || {
+        summary: state.summary || "Unable to generate summary.",
+        chartData: state.chartData || {
           labels: Object.values(WorldView).map(formatWorldviewName),
           datasets: [{
             label: "Default",
@@ -429,7 +440,7 @@ export class LangGraphCoordinator {
             borderWidth: 1
           }]
         },
-        comparisons: result.comparisons || Object.values(WorldView).map(worldview => ({
+        comparisons: state.comparisons || Object.values(WorldView).map(worldview => ({
           worldview: worldview as WorldView,
           summary: "No data available.",
           keyConcepts: ["No data available"],
