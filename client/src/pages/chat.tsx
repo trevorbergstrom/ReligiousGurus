@@ -160,7 +160,7 @@ export default function Chat() {
                 key={worldview}
                 onClick={() => handleQuickChat(worldview)}
                 variant="outline"
-                className="flex items-center gap-2"
+                className={`flex items-center gap-2 ${getWorldViewButtonStyle(worldview)}`}
                 disabled={createSessionMutation.isPending}
               >
                 <WorldViewIcon worldview={worldview} size={16} />
@@ -240,6 +240,28 @@ export default function Chat() {
     });
   };
 
+  // Get background color for worldview buttons
+  const getWorldViewButtonStyle = (worldview: string): string => {
+    switch (worldview) {
+      case WorldView.CHRISTIANITY:
+        return 'bg-blue-100 text-blue-800 hover:bg-blue-200 border-blue-300';
+      case WorldView.ISLAM:
+        return 'bg-green-100 text-green-800 hover:bg-green-200 border-green-300';
+      case WorldView.HINDUISM:
+        return 'bg-orange-100 text-orange-800 hover:bg-orange-200 border-orange-300';
+      case WorldView.BUDDHISM:
+        return 'bg-amber-100 text-amber-800 hover:bg-amber-200 border-amber-300';
+      case WorldView.JUDAISM:
+        return 'bg-purple-100 text-purple-800 hover:bg-purple-200 border-purple-300';
+      case WorldView.ATHEISM:
+        return 'bg-red-100 text-red-800 hover:bg-red-200 border-red-300';
+      case WorldView.AGNOSTICISM:
+        return 'bg-gray-100 text-gray-800 hover:bg-gray-200 border-gray-300';
+      default:
+        return 'bg-slate-100 text-slate-800 hover:bg-slate-200 border-slate-300';
+    }
+  };
+
   return (
     <div className="container max-w-6xl px-4 py-8">
       <h1 className="text-3xl font-bold mb-4">Chat with Worldview Experts</h1>
@@ -253,7 +275,7 @@ export default function Chat() {
               key={worldview}
               onClick={() => handleQuickChat(worldview as WorldView)}
               variant="outline"
-              className="flex items-center gap-2"
+              className={`flex items-center gap-2 ${getWorldViewButtonStyle(worldview)}`}
               disabled={createSessionMutation.isPending}
             >
               <WorldViewIcon worldview={worldview as WorldView} size={16} />
