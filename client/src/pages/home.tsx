@@ -121,23 +121,32 @@ export default function Home() {
           Enter a topic or question to explore how different worldviews interpret it.
         </p>
         
-        {/* Worldviews Section */}
-        <div className="bg-slate-50 rounded-xl p-6 mb-8 max-w-4xl mx-auto">
-          <h2 className="text-xl font-semibold text-center mb-4">Explore Perspectives From These Worldviews</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {Object.values(WorldView).map((worldview) => (
-              <div key={worldview} className="flex flex-col items-center p-3 bg-white rounded-lg shadow-sm">
-                <div className="w-12 h-12 flex items-center justify-center rounded-full mb-2" 
-                     style={{ backgroundColor: `${getWorldViewColor(worldview as WorldView)}20` }}>
+        {/* Worldviews Section - More compact and colorful */}
+        <div className="bg-slate-50 rounded-xl p-4 mb-6 max-w-4xl mx-auto">
+          <h2 className="text-lg font-semibold text-center mb-3">Available Worldviews</h2>
+          <div className="flex flex-wrap justify-center gap-2">
+            {Object.values(WorldView).map((worldview) => {
+              const color = getWorldViewColor(worldview as WorldView);
+              return (
+                <div 
+                  key={worldview} 
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full shadow-sm" 
+                  style={{ 
+                    backgroundColor: `${color}15`,
+                    borderWidth: "1px",
+                    borderColor: `${color}50`
+                  }}
+                >
                   <WorldViewIcon 
                     worldview={worldview as WorldView} 
-                    size={24} 
-                    className="text-slate-700" 
+                    size={18} 
+                    className="flex-shrink-0"
+                    style={{ color }}
                   />
+                  <span className="text-xs font-medium" style={{ color }}>{getWorldViewName(worldview as WorldView)}</span>
                 </div>
-                <span className="text-sm font-medium">{getWorldViewName(worldview as WorldView)}</span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
         

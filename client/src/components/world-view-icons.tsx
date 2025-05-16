@@ -14,12 +14,14 @@ interface WorldViewIconProps {
   worldview: WorldView;
   size?: number;
   className?: string;
+  style?: React.CSSProperties;
 }
 
-export function WorldViewIcon({ worldview, size = 24, className = "" }: WorldViewIconProps) {
+export function WorldViewIcon({ worldview, size = 24, className = "", style = {} }: WorldViewIconProps) {
   const iconProps = {
     size,
     className: `${className}`,
+    style,
   };
 
   switch (worldview) {
