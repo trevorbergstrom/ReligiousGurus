@@ -130,10 +130,19 @@ export default function HistoryPanel({ topics, onSelectTopic, onSearch, onDelete
                         <h3 className="font-medium text-slate-800">{topic.content}</h3>
                         <ArrowRight className="h-4 w-4 text-slate-400 mt-1 transform group-hover:translate-x-1 transition-transform" />
                       </div>
-                      <p className="text-sm text-slate-500 mt-2 flex items-center">
-                        <Clock className="h-3 w-3 mr-1 inline" />
-                        {formatRelative(new Date(topic.createdAt), new Date())}
-                      </p>
+                      <div className="flex flex-wrap justify-between mt-2">
+                        <p className="text-sm text-slate-500 flex items-center">
+                          <Clock className="h-3 w-3 mr-1 inline" />
+                          {formatRelative(new Date(topic.createdAt), new Date())}
+                        </p>
+                        {topic.model && (
+                          <span className="text-xs px-2 py-1 rounded-full bg-slate-100 text-slate-600">
+                            {topic.model.includes('/') 
+                              ? topic.model.split('/').pop() 
+                              : topic.model}
+                          </span>
+                        )}
+                      </div>
                     </button>
                     
                     {onDeleteTopic && (
