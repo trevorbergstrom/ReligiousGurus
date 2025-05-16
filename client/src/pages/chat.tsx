@@ -682,57 +682,147 @@ export default function Chat() {
       
       {/* Create Session Dialog */}
       <Dialog open={isCreatingSession} onOpenChange={setIsCreatingSession}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Create New Chat</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="worldview">Select Worldview</Label>
-              <Select
-                value={newSessionWorldview}
-                onValueChange={setNewSessionWorldview}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a worldview" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.values(WorldView).map((worldview) => (
-                    <SelectItem key={worldview} value={worldview}>
-                      <div className="flex items-center">
-                        <WorldViewIcon
-                          worldview={worldview as WorldView}
-                          size={16}
-                          className="mr-2"
-                        />
-                        {getWorldViewName(worldview as WorldView)}
+          <Tabs defaultValue="single" className="mt-2">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger 
+                value="single" 
+                onClick={() => {
+                  setIsGroupChatMode(false);
+                  setSelectedWorldviews([]);
+                }}>
+                Single Expert
+              </TabsTrigger>
+              <TabsTrigger 
+                value="group" 
+                onClick={() => setIsGroupChatMode(true)}>
+                Group Chat
+              </TabsTrigger>
+            </TabsList>
+            
+            {/* Single Expert Chat Tab */}
+            <TabsContent value="single" className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="worldview">Select Worldview Expert</Label>
+                <Select
+                  value={newSessionWorldview}
+                  onValueChange={setNewSessionWorldview}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a worldview" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.values(WorldView).map((worldview) => (
+                      <SelectItem key={worldview} value={worldview}>
+                        <div className="flex items-center">
+                          <WorldViewIcon 
+                            worldview={worldview as WorldView} 
+                            size={16} 
+                            className="mr-2" 
+                          />
+                          {getWorldViewName(worldview as WorldView)}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="title">Chat Title (Optional)</Label>
+                <Input
+                  id="title"
+                  placeholder="E.g., Questions about meditation"
+                  value={newSessionTitle}
+                  onChange={(e) => setNewSessionTitle(e.target.value)}
+                />
+                <p className="text-xs text-gray-500">
+                  If left empty, a default title will be generated.
+                </p>
+              </div>
+              <DialogFooter className="px-0">
+                <Button
+                  onClick={() => {
+                    createSessionMutation.mutate({
+                      worldview: newSessionWorldview,
+                      worldviews: [newSessionWorldview],
+                      isGroupChat: false,
+                      title: newSessionTitle || `Chat with ${getWorldViewName(newSessionWorldview as WorldView)}`
+                    });
+                  }}
+                  disabled={createSessionMutation.isPending}
+                >
+                  {createSessionMutation.isPending ? "Creating..." : "Create Chat"}
+                </Button>
+              </DialogFooter>
+            </TabsContent>
+            
+            {/* Group Chat Tab */}
+            <TabsContent value="group" className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Select Multiple Worldview Experts</Label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1">
+                  {Object.values(WorldView).map((worldview) => {
+                    const isSelected = selectedWorldviews.includes(worldview);
+                    return (
+                      <div 
+                        key={worldview}
+                        onClick={() => {
+                          if (isSelected) {
+                            setSelectedWorldviews(selectedWorldviews.filter(w => w !== worldview));
+                          } else {
+                            setSelectedWorldviews([...selectedWorldviews, worldview]);
+                          }
+                        }}
+                        className={`flex items-center p-2 border rounded-md cursor-pointer ${
+                          isSelected ? 'bg-teal-50 border-teal-500' : 'bg-gray-50 border-gray-200'
+                        }`}
+                      >
+                        <div className={`w-4 h-4 mr-2 rounded border ${
+                          isSelected ? 'bg-teal-500 border-teal-500' : 'border-gray-300'
+                        }`}>
+                          {isSelected && (
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" className="w-4 h-4">
+                              <path fillRule="evenodd" d="M19.916 4.626a.75.75 0 01.208 1.04l-9 13.5a.75.75 0 01-1.154.114l-6-6a.75.75 0 011.06-1.06l5.353 5.353 8.493-12.739a.75.75 0 011.04-.208z" clipRule="evenodd" />
+                            </svg>
+                          )}
+                        </div>
+                        <div className="flex items-center flex-1 min-w-0">
+                          <WorldViewIcon worldview={worldview as WorldView} size={16} className="mr-1 flex-shrink-0" />
+                          <span className="text-sm truncate">{getWorldViewName(worldview as WorldView)}</span>
+                        </div>
                       </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="title">Chat Title</Label>
-              <Input
-                id="title"
-                value={newSessionTitle}
-                onChange={(e) => setNewSessionTitle(e.target.value)}
-                placeholder="E.g., Questions about meditation"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button variant="outline">Cancel</Button>
-            </DialogClose>
-            <Button
-              onClick={handleCreateSession}
-              disabled={createSessionMutation.isPending}
-            >
-              Create Chat
-            </Button>
-          </DialogFooter>
+                    );
+                  })}
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Select multiple worldviews for a comparative discussion.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="group-title">Group Chat Title (Optional)</Label>
+                <Input
+                  id="group-title"
+                  placeholder="E.g., Comparing views on consciousness"
+                  value={newSessionTitle}
+                  onChange={(e) => setNewSessionTitle(e.target.value)}
+                />
+                <p className="text-xs text-gray-500">
+                  If left empty, a default title will be generated based on selected worldviews.
+                </p>
+              </div>
+              <DialogFooter className="px-0">
+                <Button 
+                  onClick={handleCreateGroupChat}
+                  disabled={selectedWorldviews.length === 0 || createSessionMutation.isPending}
+                >
+                  {createSessionMutation.isPending ? "Creating..." : "Create Group Chat"}
+                </Button>
+              </DialogFooter>
+            </TabsContent>
+          </Tabs>
         </DialogContent>
       </Dialog>
       
