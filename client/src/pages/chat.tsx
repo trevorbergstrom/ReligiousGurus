@@ -58,13 +58,13 @@ export default function Chat() {
       : Promise.resolve([]),
     enabled: !!sessionId,
   });
-
-  // Query to fetch the current session details
+  
+  // Query to fetch the current session data
   const { data: currentSession } = useQuery({
     queryKey: ['/api/chat/sessions', sessionId],
     queryFn: () => sessionId 
       ? fetchChatSession(sessionId) 
-      : Promise.resolve(null as unknown as ChatSession),
+      : Promise.resolve(null),
     enabled: !!sessionId,
   });
 
@@ -149,17 +149,46 @@ export default function Chat() {
 
     if (!sessionId) {
       return (
-        <div className="flex flex-col items-center justify-center h-64 space-y-4">
-          <p className="text-gray-500">Select or create a chat session to start</p>
-          <Button onClick={() => setIsCreatingSession(true)}>New Chat</Button>
+        <div className="flex flex-col items-center justify-center h-64 space-y-6">
+          <div className="text-center">
+            <p className="text-gray-500 mb-2">Select a session from the sidebar or start a new chat</p>
+            <p className="text-sm text-gray-400">Connect with experts from different worldviews and explore your questions</p>
+          </div>
+          <div className="flex flex-wrap justify-center gap-2">
+            {[WorldView.CHRISTIANITY, WorldView.BUDDHISM, WorldView.ATHEISM].map((worldview) => (
+              <Button 
+                key={worldview}
+                onClick={() => handleQuickChat(worldview)}
+                variant="outline"
+                className="flex items-center gap-2"
+                disabled={createSessionMutation.isPending}
+              >
+                <WorldViewIcon worldview={worldview} size={16} />
+                {getWorldViewName(worldview)}
+              </Button>
+            ))}
+          </div>
+          <Button onClick={() => setIsCreatingSession(true)}>Create Custom Chat</Button>
         </div>
       );
     }
 
     if (messages.length === 0) {
       return (
-        <div className="flex items-center justify-center h-64">
-          <p className="text-gray-500">No messages yet. Start the conversation!</p>
+        <div className="flex flex-col items-center justify-center h-64 space-y-4">
+          <div className="text-center">
+            <p className="text-gray-500 mb-2">Your conversation with {currentSession ? getWorldViewName(currentSession.worldview as WorldView) : 'an expert'}</p>
+            <p className="text-sm text-gray-400">Ask any questions about life, ethics, spirituality, or philosophy</p>
+          </div>
+          <div className="bg-slate-50 rounded-lg p-4 max-w-md">
+            <h3 className="text-sm font-medium mb-2">Suggested questions:</h3>
+            <ul className="text-sm space-y-2">
+              <li>• What happens after death according to your worldview?</li>
+              <li>• How does your worldview approach the problem of suffering?</li>
+              <li>• What is the meaning of life in your perspective?</li>
+              <li>• How should humans treat each other according to your tradition?</li>
+            </ul>
+          </div>
         </div>
       );
     }
@@ -202,9 +231,37 @@ export default function Chat() {
     );
   };
 
+  // Handler for quick chat start
+  const handleQuickChat = (worldview: WorldView) => {
+    const title = `Chat with ${getWorldViewName(worldview)}`;
+    createSessionMutation.mutate({
+      worldview,
+      title,
+    });
+  };
+
   return (
     <div className="container max-w-6xl px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Chat with Worldview Experts</h1>
+      <h1 className="text-3xl font-bold mb-4">Chat with Worldview Experts</h1>
+      
+      {/* Quick chat buttons */}
+      <div className="mb-8">
+        <p className="text-sm text-slate-600 mb-3">Start a new conversation with:</p>
+        <div className="flex flex-wrap gap-2">
+          {Object.values(WorldView).map((worldview) => (
+            <Button 
+              key={worldview}
+              onClick={() => handleQuickChat(worldview as WorldView)}
+              variant="outline"
+              className="flex items-center gap-2"
+              disabled={createSessionMutation.isPending}
+            >
+              <WorldViewIcon worldview={worldview as WorldView} size={16} />
+              {getWorldViewName(worldview as WorldView)}
+            </Button>
+          ))}
+        </div>
+      </div>
       
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {/* Sessions Sidebar */}
