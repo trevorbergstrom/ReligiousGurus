@@ -6,6 +6,7 @@ import {
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import { JsonOutputParser } from "@langchain/core/output_parsers";
+import { sanitizeChartData, generateDefaultChartData } from "./chartHelper";
 
 // The newest OpenAI model is "gpt-4o" which was released May 13, 2024
 const OPENAI_MODEL = "gpt-4o";
@@ -16,6 +17,7 @@ const CHART_COLORS = {
     'rgba(99, 102, 241, 0.2)',
     'rgba(245, 158, 11, 0.2)',
     'rgba(16, 185, 129, 0.2)',
+    'rgba(240, 150, 150, 0.2)',
   ],
   borderColor: [
     'rgba(99, 102, 241, 1)',
@@ -85,7 +87,7 @@ const summaryGenerator = (() => {
 const chartDataGenerator = (() => {
   const chartPrompt = ChatPromptTemplate.fromMessages([
     ["system", "You are a comparative religion scholar analyzing theological overlap between different religions and worldviews."],
-    ["user", `Topic: "{topic}"\n\nWorldview responses:\n{expertResponsesText}\n\nIdentify 3-4 fundamental religious concepts that are either shared or contested across these worldviews (e.g., monotheism, scripture-based authority, soul/afterlife, moral absolutes, etc.). For each concept, score each worldview (0-100) based on how central or important this concept is to that religion/worldview. Focus specifically on core theological positions that define each religion, not just their response to this topic. Return valid JSON data with a 'metrics' array (containing these core religious concepts) and a 'scores' object mapping each worldview to its scores. The visualization will directly show overlap between religions on these fundamental concepts.`],
+    ["user", `Topic: "{topic}"\n\nWorldview responses:\n{expertResponsesText}\n\nIdentify exactly 4 fundamental religious concepts that are either shared or contested across these worldviews (such as monotheism, scripture-based authority, soul/afterlife, moral absolutes, etc.). For each concept, score each worldview from 0 to 100 based on how central or important this concept is to that religion or worldview.\n\nReturn valid JSON data containing metrics (array of concept names) and scores (object mapping each worldview to an array of scores).`],
   ]);
 
   return RunnableSequence.from([
@@ -165,13 +167,37 @@ export class LangGraphCoordinator {
         
         // Transform to Chart.js format
         const labels = Object.values(WorldView);
-        const datasets = chartJson.metrics.map((metric: string, index: number) => ({
-          label: metric,
-          data: labels.map(worldview => chartJson.scores[worldview as WorldView][index]),
-          backgroundColor: CHART_COLORS.backgroundColor[index % CHART_COLORS.backgroundColor.length],
-          borderColor: CHART_COLORS.borderColor[index % CHART_COLORS.borderColor.length],
-          borderWidth: 1
-        }));
+        
+        // Log the chart data for debugging
+        console.log("Chart data received:", JSON.stringify(chartJson, null, 2));
+        
+        // Process the metrics data - ensure we have arrays for each worldview
+        const datasets = chartJson.metrics.map((metric: string, index: number) => {
+          // Extract data for this metric across all worldviews
+          const data = labels.map(worldview => {
+            const worldviewKey = worldview as string;
+            // Check if scores exist for this worldview
+            if (!chartJson.scores[worldviewKey]) {
+              console.log(`Missing scores for ${worldviewKey}`);
+              return 0; // Default value if missing
+            }
+            
+            // Get the score at this index, or default to 0
+            const score = Array.isArray(chartJson.scores[worldviewKey]) 
+              ? (chartJson.scores[worldviewKey][index] || 0)
+              : 0;
+              
+            return score;
+          });
+          
+          return {
+            label: metric,
+            data,
+            backgroundColor: CHART_COLORS.backgroundColor[index % CHART_COLORS.backgroundColor.length],
+            borderColor: CHART_COLORS.borderColor[index % CHART_COLORS.borderColor.length],
+            borderWidth: 1
+          };
+        });
         
         chartData = {
           labels: labels.map(wv => wv.charAt(0).toUpperCase() + wv.slice(1)),

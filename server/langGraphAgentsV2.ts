@@ -94,7 +94,7 @@ const summaryGenerator = (() => {
 const chartDataGenerator = (() => {
   const chartPrompt = ChatPromptTemplate.fromMessages([
     ["system", "You are a comparative religion scholar analyzing theological overlap between different religions and worldviews."],
-    ["user", `Topic: "{topic}"\n\nWorldview responses:\n{expertResponsesText}\n\nIdentify 3-4 fundamental religious concepts that are either shared or contested across these worldviews (e.g., monotheism, scripture-based authority, soul/afterlife, moral absolutes, etc.). For each concept, score each worldview (0-100) based on how central or important this concept is to that religion/worldview. Focus specifically on core theological positions that define each religion, not just their response to this topic. Return valid JSON data with a 'metrics' array (containing these core religious concepts) and a 'scores' object mapping each worldview to its scores. The visualization will directly show overlap between religions on these fundamental concepts.`],
+    ["user", `Topic: "{topic}"\n\nWorldview responses:\n{expertResponsesText}\n\nIdentify exactly 4 fundamental religious concepts that are either shared or contested across these worldviews (such as monotheism, scripture-based authority, soul/afterlife, moral absolutes, etc.). For each concept, score each worldview from 0 to 100 based on how central or important this concept is to that religion or worldview.\n\nReturn valid JSON data containing metrics (array of concept names) and scores (object mapping each worldview to an array of scores).`],
   ]);
 
   return RunnableSequence.from([
@@ -219,30 +219,79 @@ const nodes = {
         expertResponsesText
       }) as ChartDataResponse;
       
+      // Add extensive logging to debug chart issues
+      console.log("============= CHART DEBUG ===============");
+      console.log("Topic:", state.topic);
+      console.log("Chart JSON Response:", JSON.stringify(chartJson, null, 2));
+      
       // Transform to Chart.js format with safety checks
       const labels = Object.values(WorldView);
-      const metrics = chartJson.metrics || ['Relevance', 'Certainty', 'Emphasis'];
-      const scores = chartJson.scores || {};
+      console.log("Worldview Labels:", labels);
+      
+      // Ensure metrics exist or provide defaults
+      const metrics = chartJson.metrics || ['Divine/Supernatural View', 'Moral Authority', 'Afterlife Beliefs', 'Sacred Texts'];
+      console.log("Metrics:", metrics);
+      
+      // Extract scores with careful handling of object structure
+      let scores = {};
+      
+      // Handle different possible formats of scores in the response
+      if (chartJson.scores) {
+        if (typeof chartJson.scores === 'object') {
+          scores = chartJson.scores;
+        }
+      }
+      
+      console.log("Original scores:", JSON.stringify(scores, null, 2));
       
       // For safety, ensure every worldview has corresponding scores
       const safeScores = { ...scores };
       for (const worldview of labels) {
-        if (!safeScores[worldview]) {
-          safeScores[worldview] = metrics.map(() => 50); // Default to 50 if missing
+        const wv = worldview.toString();
+        
+        // Initialize array for this worldview if it doesn't exist
+        if (!safeScores[wv] || !Array.isArray(safeScores[wv])) {
+          // Create default scores (different for each worldview for visual clarity)
+          const defaultValue = labels.indexOf(worldview) * 10 + 30; // From 30 to 100
+          safeScores[wv] = metrics.map(() => defaultValue);
+        }
+        
+        // Ensure array is complete for all metrics
+        if (safeScores[wv].length < metrics.length) {
+          const missingCount = metrics.length - safeScores[wv].length;
+          safeScores[wv] = [...safeScores[wv], ...Array(missingCount).fill(50)];
         }
       }
       
-      const datasets = metrics.map((metric, index) => ({
-        label: metric,
-        data: labels.map(worldview => 
-          (safeScores[worldview] && safeScores[worldview][index] !== undefined) 
-            ? safeScores[worldview][index] 
-            : 50 // Default to 50 if the score is missing
-        ),
-        backgroundColor: CHART_COLORS.backgroundColor[index % CHART_COLORS.backgroundColor.length],
-        borderColor: CHART_COLORS.borderColor[index % CHART_COLORS.borderColor.length],
-        borderWidth: 1
-      }));
+      // Add more debugging for the safe scores
+      console.log("Safe scores after processing:", JSON.stringify(safeScores, null, 2));
+      
+      // Create datasets with improved error handling
+      const datasets = metrics.map((metric, index) => {
+        // Extract data for this metric across all worldviews
+        const data = labels.map(worldview => {
+          const wv = worldview.toString();
+          try {
+            // Access scores safely using string keys
+            return (safeScores[wv] && safeScores[wv][index] !== undefined) 
+              ? Number(safeScores[wv][index])  // Ensure it's a number
+              : 50;                            // Default to 50 if missing
+          } catch (err) {
+            console.log(`Error accessing score for ${wv}, metric ${index}:`, err);
+            return 50; // Default on error
+          }
+        });
+        
+        console.log(`Dataset for ${metric}:`, data);
+        
+        return {
+          label: metric,
+          data,
+          backgroundColor: CHART_COLORS.backgroundColor[index % CHART_COLORS.backgroundColor.length],
+          borderColor: CHART_COLORS.borderColor[index % CHART_COLORS.borderColor.length],
+          borderWidth: 1
+        };
+      });
       
       const chartData: ChartData = {
         labels: labels.map(formatWorldviewName),
