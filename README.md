@@ -35,10 +35,10 @@ The application is built using:
 
 - **Frontend**: React, TypeScript, Tailwind CSS, shadcn/ui
 - **Backend**: Express.js with Node.js
-- **AI Integration**: OpenAI API (GPT-4o and other models)
+- **AI Integration**: OpenAI API with GPT models (GPT-4o, GPT-4, GPT-3.5-turbo)
 - **Database**: PostgreSQL for persistent storage
-- **Data Visualization**: Chart.js
-- **API Integration**: OpenAI API
+- **Data Visualization**: Chart.js for worldview comparison metrics
+- **Architecture**: LangGraph for agent orchestration
 
 ## 📝 Usage
 
@@ -54,34 +54,47 @@ The application is built using:
 1. Select a worldview you want to chat with or create a group chat with multiple worldviews
 2. For single worldview chats:
    - Click on any worldview button to start a one-on-one conversation
+   - Chat directly with an AI agent representing that specific perspective
 3. For group chats with multiple perspectives:
    - Click "New Chat" and select the "Group Chat" tab
-   - Select multiple worldviews you want to include in the conversation
-   - Enter an optional title for your group chat
-4. Enter your questions and receive responses from each selected worldview
-5. Choose an OpenAI model for your conversation
-6. Continue the conversation in a chat-like interface
-7. See different perspectives clearly labeled with worldview icons
+   - Check the boxes for multiple worldviews you want to include (e.g., Buddhism, Christianity, and Islam)
+   - Enter an optional title for your group chat (or a default will be generated)
+4. Type your questions into the chat input field
+5. Receive distinct responses from each selected worldview perspective in the same conversation
+6. Choose your preferred OpenAI model using the compact selector at the bottom
+7. Each response is clearly labeled with the corresponding worldview icon and name
 
 ## 🧬 System Architecture
 
-The application uses an agentic AI framework:
+The application uses an agentic AI framework with the following components:
 
-1. **Coordinator Agent**: Receives user input and coordinates responses
-2. **Expert Agents**: Eight specialist agents representing each worldview
-3. **Response Synthesis**: Aggregates insights into summaries and visualizations
-4. **Transparent Processing**: Shows users how the AI generates its responses
-5. **Multi-Agent Conversations**: Enables discussions with multiple expert agents simultaneously
-6. **Parallel Processing**: Processes responses from multiple worldviews for group conversations
+1. **Coordinator Agent**: Orchestrates the entire response generation process
+2. **Worldview Expert Agents**: Eight specialist agents representing each religious/philosophical perspective
+3. **Response Synthesis Engine**: Aggregates insights into coherent summaries
+4. **Visualization Generator**: Creates comparative charts based on expert responses
+5. **Process Transparency System**: Shows users how information is gathered and processed
+6. **Multi-Agent Chat System**: Enables group discussions with multiple worldview experts simultaneously
+7. **Parallel Processing Pipeline**: Handles concurrent responses from multiple religious perspectives
 
 ## 🔐 API Requirements
 
 This application requires an OpenAI API key to function. The key should be added as an environment variable:
-- `OPENAI_API_KEY`: Your API key from OpenAI
+- `OPENAI_API_KEY`: Your API key from OpenAI (required for all AI functionality)
+
+The application uses exclusively OpenAI models for all AI interactions:
+- GPT-4o: Recommended for most conversations (default)
+- GPT-4: Good for complex reasoning tasks
+- GPT-3.5-turbo: Faster response times for simpler queries
 
 ## 📱 Mobile Support
 
-The application is fully responsive and supports all device sizes from mobile to desktop, with optimized layouts for each form factor.
+The application is fully responsive and supports all device sizes from mobile to desktop, with optimized layouts for each form factor:
+
+- Responsive grid layouts that adapt to screen size
+- Mobile-optimized navigation with collapsible sections
+- Touch-friendly interface elements for all interactions
+- Properly sized text and controls on smaller screens
+- Optimized group chat interface for mobile devices
 
 ## 🤝 Contributing
 
@@ -90,6 +103,8 @@ Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for details on
 ## 📜 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+All source code files include the appropriate MIT license headers, making it easy for others to understand the licensing terms and contribute to or build upon this project.
 
 ## ⚠️ Disclaimer
 
