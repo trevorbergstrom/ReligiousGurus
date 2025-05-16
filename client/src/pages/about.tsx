@@ -11,8 +11,6 @@ import { Button } from "@/components/ui/button";
 export default function About() {
   return (
     <div className="bg-slate-50 min-h-screen flex flex-col">
-      <Header />
-      
       <main className="container mx-auto px-4 py-8 flex-grow">
         <div className="max-w-4xl mx-auto">
           {/* Back Button */}
@@ -60,7 +58,7 @@ export default function About() {
                     </CardHeader>
                     <CardContent>
                       <p className="text-slate-600">
-                        Explore how seven different worldviews interpret the same topic, presented side by side for easy comparison.
+                        Explore how eight different worldviews interpret the same topic, presented side by side for easy comparison.
                       </p>
                     </CardContent>
                   </Card>
@@ -174,7 +172,6 @@ export default function About() {
         </div>
       </main>
       
-      <Footer />
     </div>
   );
 }
