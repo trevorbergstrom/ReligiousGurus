@@ -303,14 +303,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const worldviewEnum = session.worldview as WorldView;
         const chatAgent = ChatAgentFactory.getAgent(worldviewEnum);
         
-        // Get the AI response
-        const responseContent = await chatAgent.processMessage(userMessage.content);
+        // Get the AI response with model info if provided
+        const model = req.body.model;
+        const provider = req.body.provider;
+        const responseContent = await chatAgent.processMessage(
+          userMessage.content,
+          model,
+          provider
+        );
         
-        // Save the AI response
+        // Save the AI response with model information
         const aiMessage = await storage.createChatMessage({
           sessionId: sessionId,
           content: responseContent,
-          isUser: false
+          isUser: false,
+          model: model || AIModel.LLAMA_3_1B,
+          provider: provider || ModelProvider.HUGGINGFACE
         });
         
         // Return both messages

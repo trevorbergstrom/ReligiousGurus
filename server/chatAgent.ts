@@ -38,9 +38,24 @@ export class WorldviewChatAgent {
   }
   
   // Process a user message and return a response
-  public async processMessage(userMessage: string): Promise<string> {
+  public async processMessage(
+    userMessage: string, 
+    model?: string, 
+    provider?: string
+  ): Promise<string> {
     try {
-      return await this.chat.invoke({
+      // We'll process the message directly with model selection
+      if (model && provider) {
+        // For this case, we'll use a fresh agent with the requested model
+        const freshChatAgent = createChatAgent(this.worldview, model, provider);
+        return await freshChatAgent.invoke({
+          context: this.context,
+          history: "",
+          userMessage
+        });
+      }
+        
+      return await chatAgent.invoke({
         context: this.context,
         history: "", // Can be expanded to include conversation history
         userMessage
@@ -52,8 +67,8 @@ export class WorldviewChatAgent {
   }
 }
 
-// Create a chat agent for a specific worldview
-function createChatAgent(worldview: WorldView) {
+// Create a chat agent for a specific worldview with optional model specification
+function createChatAgent(worldview: WorldView, modelId?: string, provider?: string) {
   // Configure worldview-specific instructions
   let worldviewSpecificInstructions = "";
   
@@ -97,9 +112,23 @@ Respond conversationally while staying true to ${worldview} perspectives. Keep r
     ["user", "{userMessage}"],
   ]);
 
+  // Select the model based on provider
+  let chatModel = model; // default to the predefined model
+  
+  // If specific model requested and available, use it
+  if (modelId && provider) {
+    if (provider === 'openai') {
+      chatModel = new ChatOpenAI({
+        modelName: modelId,
+        temperature: 0.7,
+      });
+    }
+    // Future enhancement: Add support for Hugging Face models here
+  }
+  
   return RunnableSequence.from([
     chatPrompt,
-    model,
+    chatModel,
     new StringOutputParser(),
   ]);
 }
