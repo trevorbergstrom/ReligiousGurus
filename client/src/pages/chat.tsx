@@ -308,6 +308,8 @@ export default function Chat() {
         return 'bg-red-100 text-red-800 hover:bg-red-200 border-red-300';
       case WorldView.AGNOSTICISM:
         return 'bg-gray-100 text-gray-800 hover:bg-gray-200 border-gray-300';
+      case WorldView.SIKHISM:
+        return 'bg-orange-100 text-orange-800 hover:bg-orange-200 border-orange-300';
       default:
         return 'bg-slate-100 text-slate-800 hover:bg-slate-200 border-slate-300';
     }

@@ -6,7 +6,8 @@ import {
   Moon, // For Islam
   Waves, // For Hinduism (Om symbol alternative)
   Flower2, // For Buddhism (lotus flower)
-  Star, // For Judaism (Star of David alternative),
+  Star, // For Judaism (Star of David alternative)
+  CircleDot, // For Sikhism (Khanda alternative)
 } from "lucide-react";
 
 interface WorldViewIconProps {
@@ -36,6 +37,8 @@ export function WorldViewIcon({ worldview, size = 24, className = "" }: WorldVie
       return <Flower2 {...iconProps} />;
     case WorldView.JUDAISM:
       return <Star {...iconProps} />;
+    case WorldView.SIKHISM:
+      return <CircleDot {...iconProps} />;
     default:
       return <HelpCircle {...iconProps} />;
   }
@@ -62,6 +65,8 @@ export function getWorldViewColor(worldview: WorldView): string {
       return "rgb(245, 158, 11)"; // amber-500
     case WorldView.JUDAISM:
       return "rgb(79, 70, 229)"; // indigo-600
+    case WorldView.SIKHISM:
+      return "rgb(234, 88, 12)"; // orange-600
     default:
       return "rgb(71, 85, 105)"; // slate-600
   }

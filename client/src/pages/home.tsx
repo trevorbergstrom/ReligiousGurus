@@ -7,6 +7,8 @@ import ResultsPanel from "@/components/results-panel";
 import MediaGallery from "@/components/media-gallery";
 import { fetchTopics, submitTopic, fetchResponse, deleteTopic } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import { WorldView } from "@shared/schema";
+import { WorldViewIcon, getWorldViewName, getWorldViewColor } from "@/components/world-view-icons";
 
 export default function Home() {
   const [currentTopicResponse, setCurrentTopicResponse] = useState<TopicResponsePair | null>(null);
@@ -115,9 +117,29 @@ export default function Home() {
     <div>
       <main className="container mx-auto px-4 py-6 flex-grow">
         <h1 className="text-3xl font-bold text-center mb-6">Welcome to Religious Gurus</h1>
-        <p className="text-center text-lg mb-8 max-w-3xl mx-auto">
+        <p className="text-center text-lg mb-4 max-w-3xl mx-auto">
           Enter a topic or question to explore how different worldviews interpret it.
         </p>
+        
+        {/* Worldviews Section */}
+        <div className="bg-slate-50 rounded-xl p-6 mb-8 max-w-4xl mx-auto">
+          <h2 className="text-xl font-semibold text-center mb-4">Explore Perspectives From These Worldviews</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {Object.values(WorldView).map((worldview) => (
+              <div key={worldview} className="flex flex-col items-center p-3 bg-white rounded-lg shadow-sm">
+                <div className="w-12 h-12 flex items-center justify-center rounded-full mb-2" 
+                     style={{ backgroundColor: `${getWorldViewColor(worldview as WorldView)}20` }}>
+                  <WorldViewIcon 
+                    worldview={worldview as WorldView} 
+                    size={24} 
+                    className="text-slate-700" 
+                  />
+                </div>
+                <span className="text-sm font-medium">{getWorldViewName(worldview as WorldView)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column (Input and History) */}

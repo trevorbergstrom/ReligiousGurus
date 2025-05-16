@@ -47,6 +47,7 @@ export enum WorldView {
   HINDUISM = "hinduism",
   BUDDHISM = "buddhism",
   JUDAISM = "judaism",
+  SIKHISM = "sikhism",
 }
 
 // Chart data types for the frontend
