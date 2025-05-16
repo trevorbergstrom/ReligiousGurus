@@ -315,7 +315,7 @@ export default function Chat() {
                           size={16}
                           className="mr-1"
                         />
-                        <span className={`text-xs font-medium ${getWorldViewColor(currentSession.worldview)}`}>
+                        <span className={`text-xs font-medium ${getWorldViewColor(currentSession.worldview as WorldView)}`}>
                           {getWorldViewName(currentSession.worldview as WorldView)}
                         </span>
                         

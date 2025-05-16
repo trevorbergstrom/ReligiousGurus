@@ -37,26 +37,32 @@ export default function ModelSelector({
   onChange,
   disabled = false
 }: ModelSelectorProps) {
+  // Compact version - horizontal radio buttons
   return (
-    <div className="flex flex-col space-y-2">
-      <label className="text-sm font-medium text-slate-700">Model</label>
-      <RadioGroup 
-        defaultValue={selectedModel} 
-        value={selectedModel}
-        onValueChange={(value) => onChange(value, "openai")}
-        className="flex flex-col space-y-2"
-        disabled={disabled}
-      >
-        {MODELS.map((model) => (
-          <div key={model.id} className="flex items-center space-x-2 border border-slate-200 rounded-md p-2 bg-slate-50">
-            <RadioGroupItem value={model.id} id={model.id} />
-            <Label htmlFor={model.id} className="flex flex-col cursor-pointer w-full">
-              <span className="font-medium">{model.name}</span>
-              <span className="text-xs text-slate-500">{model.description}</span>
-            </Label>
-          </div>
-        ))}
-      </RadioGroup>
+    <div className="w-full">
+      <div className="flex items-center justify-between">
+        <label className="text-xs font-medium text-slate-700">Model:</label>
+        <RadioGroup 
+          defaultValue={selectedModel} 
+          value={selectedModel}
+          onValueChange={(value) => onChange(value, "openai")}
+          className="flex items-center space-x-3"
+          disabled={disabled}
+        >
+          {MODELS.map((model) => (
+            <div key={model.id} className="flex items-center space-x-1">
+              <RadioGroupItem value={model.id} id={model.id} className="h-3.5 w-3.5" />
+              <Label 
+                htmlFor={model.id} 
+                className="text-xs cursor-pointer flex items-center"
+                title={model.description}
+              >
+                {model.name}
+              </Label>
+            </div>
+          ))}
+        </RadioGroup>
+      </div>
     </div>
   );
 }
