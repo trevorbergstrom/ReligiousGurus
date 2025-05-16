@@ -45,14 +45,14 @@ export default function ModelSelector({
         disabled={disabled}
       >
         <SelectTrigger className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg">
-          <SelectValue placeholder="Select a model" />
+          <SelectValue className="truncate" placeholder="Select a model" />
         </SelectTrigger>
-        <SelectContent className="max-w-[350px]">
+        <SelectContent className="w-[250px] md:w-[300px]">
           {MODELS.map((model) => (
-            <SelectItem key={model.id} value={model.id}>
-              <div className="flex flex-col py-1">
+            <SelectItem key={model.id} value={model.id} className="py-2">
+              <div className="flex flex-col">
                 <span className="font-medium">{model.name}</span>
-                <span className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{model.description}</span>
+                <span className="text-xs text-muted-foreground mt-1">{model.description}</span>
               </div>
             </SelectItem>
           ))}

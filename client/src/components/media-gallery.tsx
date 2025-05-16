@@ -13,11 +13,11 @@ export default function MediaGallery() {
     <Card className="mb-6">
       <CardContent className="p-5">
         <Tabs defaultValue="comparisons" onValueChange={setActiveTab} className="w-full">
-          <div className="flex justify-between items-center mb-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
             <h3 className="font-semibold text-lg">Key Information</h3>
-            <TabsList>
-              <TabsTrigger value="comparisons">Worldview Comparisons</TabsTrigger>
-              <TabsTrigger value="how-it-works">How It Works</TabsTrigger>
+            <TabsList className="h-auto p-1">
+              <TabsTrigger value="comparisons" className="text-sm px-3 py-1.5">Worldview Comparisons</TabsTrigger>
+              <TabsTrigger value="how-it-works" className="text-sm px-3 py-1.5">How It Works</TabsTrigger>
             </TabsList>
           </div>
           

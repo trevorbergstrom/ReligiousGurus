@@ -132,7 +132,7 @@ export default function Home() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left Column (Input) - Consistent on mobile & desktop for better UX */}
           <div className="lg:col-span-4 order-1">
-            <div className="lg:sticky lg:top-4">
+            <div className="sticky top-4">
               <div className="shadow-card rounded-lg overflow-hidden hover-scale transition-all-smooth">
                 <TopicForm
                   topics={topics}
