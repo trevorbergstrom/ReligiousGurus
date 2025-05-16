@@ -5,8 +5,18 @@ import { randomUUID } from "crypto";
 
 // Available models
 export enum AIModel {
+  // Free-tier models more likely to work with standard API key
+  GPT2 = "gpt2", // Listed first to make it default
+  DISTILGPT2 = "distilgpt2",
+  BLOOM = "bigscience/bloom-560m",
+  FLAN_T5 = "google/flan-t5-base",
+  FALCON = "tiiuae/falcon-7b-instruct",
+  
+  // OpenAI model
   GPT_4_O = "gpt-4o",
-  LLAMA_3_1B = "meta-llama/Llama-3.2-1B-Instruct", // Listed first to make it default
+  
+  // Premium models that may require special access
+  LLAMA_3_1B = "meta-llama/Llama-3.2-1B-Instruct",
   GEMMA_3_1B = "google/gemma-3-1b-it",
   QWEN_7B = "Qwen/Qwen2.5-7B-Instruct",
   MISTRAL_7B = "mistralai/Mistral-7B-Instruct-v0.2",

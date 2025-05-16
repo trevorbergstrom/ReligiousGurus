@@ -7,7 +7,16 @@ if (!process.env.HUGGINGFACE_API_KEY) {
 const hf = new HfInference(process.env.HUGGINGFACE_API_KEY);
 
 // Supported models - using publicly available models on Hugging Face
+// Note: Some models require special access or Pro subscription
 export enum HuggingFaceModels {
+  // Free tier models more likely to work
+  DISTILGPT2 = "distilgpt2",
+  GPT2 = "gpt2",
+  BLOOM = "bigscience/bloom-560m",
+  FLAN_T5 = "google/flan-t5-base",
+  FALCON = "tiiuae/falcon-7b-instruct",
+  
+  // These models may require special access
   LLAMA_3_1B = "meta-llama/Llama-3.2-1B-Instruct",
   GEMMA_3_1B = "google/gemma-3-1b-it",
   QWEN_7B = "Qwen/Qwen2.5-7B-Instruct",
@@ -25,6 +34,7 @@ export interface ModelConfig {
 }
 
 export const MODELS: ModelConfig[] = [
+  // OpenAI model
   {
     id: "gpt-4o",
     name: "GPT-4o (OpenAI)",
@@ -32,6 +42,45 @@ export const MODELS: ModelConfig[] = [
     provider: "openai",
     apiKey: "OPENAI_API_KEY"
   },
+  
+  // Free-tier Hugging Face models (more likely to work with free API key)
+  {
+    id: HuggingFaceModels.DISTILGPT2,
+    name: "DistilGPT-2",
+    description: "Lightweight language model, fast responses",
+    provider: "huggingface",
+    apiKey: "HUGGINGFACE_API_KEY"
+  },
+  {
+    id: HuggingFaceModels.GPT2,
+    name: "GPT-2",
+    description: "Classic language model for text generation",
+    provider: "huggingface",
+    apiKey: "HUGGINGFACE_API_KEY"
+  },
+  {
+    id: HuggingFaceModels.BLOOM,
+    name: "BLOOM (560M)",
+    description: "Efficient multilingual language model",
+    provider: "huggingface",
+    apiKey: "HUGGINGFACE_API_KEY"
+  },
+  {
+    id: HuggingFaceModels.FLAN_T5,
+    name: "Flan-T5",
+    description: "Google's instruction-tuned text model",
+    provider: "huggingface", 
+    apiKey: "HUGGINGFACE_API_KEY"
+  },
+  {
+    id: HuggingFaceModels.FALCON,
+    name: "Falcon (7B)",
+    description: "Open access instruction model",
+    provider: "huggingface",
+    apiKey: "HUGGINGFACE_API_KEY"
+  },
+  
+  // Premium models (may require special access)
   {
     id: HuggingFaceModels.LLAMA_3_1B,
     name: "Llama 3.2 (1B)",
@@ -88,9 +137,22 @@ export async function generateTextWithHuggingFace(
     }
 
     console.log(`Attempting to use Hugging Face model: ${model}`);
-    const fullPrompt = systemPrompt ? `${systemPrompt}\n\n${prompt}` : prompt;
+    // Format the prompt differently based on if it's an instruction model or not
+    let fullPrompt: string;
+    
+    // If it's one of the premium instruction models that might not be available
+    if (model.includes("Llama") || model.includes("gemma") || 
+        model.includes("mistral") || model.includes("Qwen")) {
+      fullPrompt = systemPrompt ? `${systemPrompt}\n\n${prompt}` : prompt;
+    } 
+    // For simpler models like GPT-2, just use a basic prompt format
+    else {
+      fullPrompt = systemPrompt ? 
+        `${systemPrompt}\n\nQuestion: ${prompt}\n\nAnswer:` : 
+        `Question: ${prompt}\n\nAnswer:`;
+    }
 
-    // Use a more reliable approach with error handling
+    // Try the requested model first
     try {
       const response = await hf.textGeneration({
         model: model,
@@ -109,19 +171,38 @@ export async function generateTextWithHuggingFace(
     } catch (innerError) {
       console.error(`Error with specific model ${model}:`, innerError);
       
-      // Fall back to a known working model if specific model fails
-      console.log("Falling back to Gemma model...");
-      const fallbackResponse = await hf.textGeneration({
-        model: "google/gemma-2b-it", // reliable fallback model
-        inputs: fullPrompt,
-        parameters: {
-          max_new_tokens: 512,
-          temperature: 0.7,
-          top_p: 0.95,
-        }
-      });
+      // Try a series of free-tier models as fallbacks
+      const freeTierModels = [
+        HuggingFaceModels.GPT2,
+        HuggingFaceModels.DISTILGPT2,
+        HuggingFaceModels.BLOOM,
+        HuggingFaceModels.FLAN_T5
+      ];
       
-      return fallbackResponse.generated_text || "No response generated";
+      // Try each fallback model in sequence
+      for (const fallbackModel of freeTierModels) {
+        console.log(`Trying fallback model: ${fallbackModel}`);
+        try {
+          const fallbackResponse = await hf.textGeneration({
+            model: fallbackModel,
+            inputs: fullPrompt,
+            parameters: {
+              max_new_tokens: 512,
+              temperature: 0.7,
+              top_p: 0.95,
+            }
+          });
+          
+          console.log(`Successfully generated text with fallback model ${fallbackModel}`);
+          return fallbackResponse.generated_text || "No response generated";
+        } catch (fallbackError) {
+          console.error(`Error with fallback model ${fallbackModel}:`, fallbackError);
+          // Continue to the next fallback model
+        }
+      }
+      
+      // If all fallbacks fail, throw an error to trigger OpenAI fallback
+      throw new Error("All Hugging Face models failed");
     }
   } catch (error) {
     console.error("Error generating text with Hugging Face:", error);
