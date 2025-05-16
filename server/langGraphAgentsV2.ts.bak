@@ -421,7 +421,7 @@ function createWorldviewGraph() {
 const worldviewGraph = createWorldviewGraph();
 
 // Create a coordinator agent class that uses the LangGraph
-export class LangGraphCoordinatorV2 {
+export class LangGraphCoordinator {
   private graph: any;
   
   constructor() {
@@ -470,4 +470,4 @@ export class LangGraphCoordinatorV2 {
 }
 
 // Export a singleton coordinator agent
-export const langGraphCoordinatorV2 = new LangGraphCoordinatorV2();
+export const langGraphCoordinator = new LangGraphCoordinator();

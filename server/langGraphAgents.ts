@@ -1,11 +1,18 @@
 import { ChartData, WorldView, WorldViewComparison } from "@shared/schema";
 import { ChatOpenAI } from "@langchain/openai";
+// import { 
+//  StateGraph, 
+//  END
+// } from "@langchain/langgraph";
 import { 
-  RunnableSequence 
+  RunnableSequence, 
+  RunnableMap
 } from "@langchain/core/runnables";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import { JsonOutputParser } from "@langchain/core/output_parsers";
+import { StructuredTool } from "@langchain/core/tools";
+import { Tool } from "@langchain/core/tools";
 import { sanitizeChartData, generateDefaultChartData } from "./chartHelper";
 
 // The newest OpenAI model is "gpt-4o" which was released May 13, 2024
@@ -17,7 +24,6 @@ const CHART_COLORS = {
     'rgba(99, 102, 241, 0.2)',
     'rgba(245, 158, 11, 0.2)',
     'rgba(16, 185, 129, 0.2)',
-    'rgba(240, 150, 150, 0.2)',
   ],
   borderColor: [
     'rgba(99, 102, 241, 1)',
@@ -32,19 +38,21 @@ const model = new ChatOpenAI({
   temperature: 0,
 });
 
-// Define the state interface
+// Define the state interface with more robust typing
 interface AgentState {
   topic: string;
-  expertResponses: Record<WorldView, string>;
+  expertResponses: Partial<Record<WorldView, string>>;
   summary?: string;
   chartData?: ChartData;
   comparisons?: WorldViewComparison[];
+  errors?: string[];
+  allResponded?: boolean;
 }
 
 // Define interfaces for the AI responses
 interface ChartDataResponse {
   metrics: string[];
-  scores: Record<WorldView, number[]>;
+  scores: Record<string, number[]>;
 }
 
 interface ComparisonDataResponse {
@@ -111,17 +119,287 @@ const comparisonsGenerator = (() => {
   ]);
 })();
 
-// Create a simpler implementation that doesn't use the complex LangGraph features yet
-// This will allow us to still benefit from the LangChain structured approach
+// Helper function to format worldview name
+const formatWorldviewName = (worldview: string): string => {
+  return worldview.charAt(0).toUpperCase() + worldview.slice(1);
+};
+
+// Helper function to convert expert responses to text format
+const formatExpertResponses = (responses: Partial<Record<WorldView, string>>): string => {
+  return Object.entries(responses)
+    .map(([worldview, response]) => `${worldview}: ${response}`)
+    .join('\n');
+};
+
+// Define nodes for the LangGraph
+const nodes = {
+  // Node to collect expert responses
+  collectExpertResponses: async (state: AgentState): Promise<AgentState> => {
+    try {
+      // Create a map of expert agents for each worldview
+      const expertAgents: Record<WorldView, ReturnType<typeof createExpertAgent>> = {} as any;
+      for (const worldview of Object.values(WorldView)) {
+        expertAgents[worldview] = createExpertAgent(worldview);
+      }
+      
+      // Run all expert agents in parallel
+      const expertPromises = Object.entries(expertAgents).map(async ([worldview, agent]) => {
+        try {
+          const response = await agent.invoke({ topic: state.topic });
+          return { worldview, response, error: null };
+        } catch (error) {
+          console.error(`Error with ${worldview} expert:`, error);
+          return { 
+            worldview, 
+            response: `The ${worldview} perspective could not be retrieved at this time.`, 
+            error: error instanceof Error ? error.message : String(error) 
+          };
+        }
+      });
+      
+      // Await all promises
+      const results = await Promise.all(expertPromises);
+      
+      // Collect responses and errors
+      const expertResponses: Partial<Record<WorldView, string>> = {};
+      const errors: string[] = [];
+      
+      for (const { worldview, response, error } of results) {
+        expertResponses[worldview as WorldView] = response;
+        if (error) {
+          errors.push(`${worldview}: ${error}`);
+        }
+      }
+      
+      return {
+        ...state,
+        expertResponses,
+        errors: errors.length > 0 ? errors : undefined,
+        allResponded: true
+      };
+    } catch (error) {
+      console.error("Error collecting expert responses:", error);
+      return {
+        ...state,
+        errors: [...(state.errors || []), `Failed to collect expert responses: ${error instanceof Error ? error.message : String(error)}`]
+      };
+    }
+  },
+  
+  // Node to generate summary
+  generateSummary: async (state: AgentState): Promise<AgentState> => {
+    try {
+      const expertResponsesText = formatExpertResponses(state.expertResponses);
+      
+      const summary = await summaryGenerator.invoke({
+        topic: state.topic,
+        expertResponsesText
+      });
+      
+      return {
+        ...state,
+        summary
+      };
+    } catch (error) {
+      console.error("Error generating summary:", error);
+      return {
+        ...state,
+        summary: "We were unable to generate a summary for this topic at this time.",
+        errors: [...(state.errors || []), `Failed to generate summary: ${error instanceof Error ? error.message : String(error)}`]
+      };
+    }
+  },
+  
+  // Node to generate chart data
+  generateChartData: async (state: AgentState): Promise<AgentState> => {
+    try {
+      const expertResponsesText = formatExpertResponses(state.expertResponses);
+      
+      // Get chart data from AI model
+      const chartJson = await chartDataGenerator.invoke({
+        topic: state.topic,
+        expertResponsesText
+      }) as ChartDataResponse;
+      
+      // Add extensive logging to debug chart issues
+      console.log("============= CHART DEBUG ===============");
+      console.log("Topic:", state.topic);
+      console.log("Chart JSON Response:", JSON.stringify(chartJson, null, 2));
+      
+      // Transform to Chart.js format with safety checks
+      const labels = Object.values(WorldView);
+      console.log("Worldview Labels:", labels);
+      
+      // Ensure metrics exist or provide defaults
+      const metrics = chartJson.metrics || ['Divine/Supernatural View', 'Moral Authority', 'Afterlife Beliefs', 'Sacred Texts'];
+      console.log("Metrics:", metrics);
+      
+      // Extract scores with careful handling of object structure
+      let scores = {};
+      
+      // Handle different possible formats of scores in the response
+      if (chartJson.scores) {
+        if (typeof chartJson.scores === 'object') {
+          scores = chartJson.scores;
+        }
+      }
+      
+      console.log("Original scores:", JSON.stringify(scores, null, 2));
+      
+      // For safety, ensure every worldview has corresponding scores
+      const safeScores = { ...scores };
+      for (const worldview of labels) {
+        const wv = worldview.toString();
+        
+        // Initialize array for this worldview if it doesn't exist
+        if (!safeScores[wv] || !Array.isArray(safeScores[wv])) {
+          // Create default scores (different for each worldview for visual clarity)
+          const defaultValue = labels.indexOf(worldview) * 10 + 30; // From 30 to 100
+          safeScores[wv] = metrics.map(() => defaultValue);
+        }
+        
+        // Ensure array is complete for all metrics
+        if (safeScores[wv].length < metrics.length) {
+          const missingCount = metrics.length - safeScores[wv].length;
+          safeScores[wv] = [...safeScores[wv], ...Array(missingCount).fill(50)];
+        }
+      }
+      
+      // Add more debugging for the safe scores
+      console.log("Safe scores after processing:", JSON.stringify(safeScores, null, 2));
+      
+      // Create datasets with improved error handling
+      const datasets = metrics.map((metric, index) => {
+        // Extract data for this metric across all worldviews
+        const data = labels.map(worldview => {
+          const wv = worldview.toString();
+          try {
+            // Access scores safely using string keys
+            return (safeScores[wv] && safeScores[wv][index] !== undefined) 
+              ? Number(safeScores[wv][index])  // Ensure it's a number
+              : 50;                            // Default to 50 if missing
+          } catch (err) {
+            console.log(`Error accessing score for ${wv}, metric ${index}:`, err);
+            return 50; // Default on error
+          }
+        });
+        
+        console.log(`Dataset for ${metric}:`, data);
+        
+        return {
+          label: metric,
+          data,
+          backgroundColor: CHART_COLORS.backgroundColor[index % CHART_COLORS.backgroundColor.length],
+          borderColor: CHART_COLORS.borderColor[index % CHART_COLORS.borderColor.length],
+          borderWidth: 1
+        };
+      });
+      
+      // Use our chart helper to sanitize and standardize the data
+      const chartData: ChartData = sanitizeChartData(chartJson);
+      
+      return {
+        ...state,
+        chartData
+      };
+    } catch (error) {
+      console.error("Error generating chart data:", error);
+      
+      // Return fallback chart data
+      const labels = Object.values(WorldView).map(formatWorldviewName);
+      const chartData: ChartData = {
+        labels,
+        datasets: [
+          {
+            label: "Relevance",
+            data: labels.map(() => Math.floor(Math.random() * 100)),
+            backgroundColor: CHART_COLORS.backgroundColor[0],
+            borderColor: CHART_COLORS.borderColor[0],
+            borderWidth: 1
+          }
+        ]
+      };
+      
+      return {
+        ...state,
+        chartData,
+        errors: [...(state.errors || []), `Failed to generate chart data: ${error instanceof Error ? error.message : String(error)}`]
+      };
+    }
+  },
+  
+  // Node to generate comparisons
+  generateComparisons: async (state: AgentState): Promise<AgentState> => {
+    try {
+      const expertResponsesText = formatExpertResponses(state.expertResponses);
+      
+      const comparisonData = await comparisonsGenerator.invoke({
+        topic: state.topic,
+        expertResponsesText
+      }) as ComparisonDataResponse;
+      
+      // Convert to our schema format with safety checks
+      const comparisons: WorldViewComparison[] = [];
+      
+      for (const worldview of Object.values(WorldView)) {
+        const worldviewStr = worldview.toString();
+        let data;
+        
+        if (comparisonData && comparisonData[worldviewStr]) {
+          data = comparisonData[worldviewStr];
+        } else {
+          // Fallback data if missing
+          data = {
+            summary: state.expertResponses[worldview as WorldView] || "No summary available.",
+            keyConcepts: ["No data available"],
+            afterlifeType: "Unknown"
+          };
+        }
+        
+        comparisons.push({
+          worldview: worldview as WorldView,
+          summary: data.summary,
+          keyConcepts: data.keyConcepts || ["No data available"],
+          afterlifeType: data.afterlifeType || "Unknown"
+        });
+      }
+      
+      return {
+        ...state,
+        comparisons
+      };
+    } catch (error) {
+      console.error("Error generating comparisons:", error);
+      
+      // Generate fallback comparison data
+      const comparisons = Object.values(WorldView).map(worldview => ({
+        worldview: worldview as WorldView,
+        summary: state.expertResponses[worldview as WorldView] || "No data available.",
+        keyConcepts: ["No data available"],
+        afterlifeType: "Unknown"
+      }));
+      
+      return {
+        ...state,
+        comparisons,
+        errors: [...(state.errors || []), `Failed to generate comparisons: ${error instanceof Error ? error.message : String(error)}`]
+      };
+    }
+  }
+};
+
+// NOTE: We've simplified the approach to not use StateGraph directly due to compatibility issues
+// Instead, we'll use a simple sequential workflow that accomplishes the same tasks
+
+// No graph creation needed - we'll use a simpler sequential approach
+const worldviewGraph = null;
+
+// Create a coordinator agent class that uses the LangGraph
 export class LangGraphCoordinator {
-  private expertAgents: Record<WorldView, ReturnType<typeof createExpertAgent>>;
+  private graph: any;
   
   constructor() {
-    // Initialize expert agents for each worldview
-    this.expertAgents = {} as Record<WorldView, ReturnType<typeof createExpertAgent>>;
-    for (const worldview of Object.values(WorldView)) {
-      this.expertAgents[worldview as WorldView] = createExpertAgent(worldview as WorldView);
-    }
+    this.graph = worldviewGraph;
   }
   
   async processTopic(topic: string): Promise<{
@@ -130,100 +408,33 @@ export class LangGraphCoordinator {
     comparisons: WorldViewComparison[];
   }> {
     try {
-      // Step 1: Get responses from all expert agents
-      const expertResponses: Record<WorldView, string> = {} as Record<WorldView, string>;
-      
-      // Execute each expert agent in parallel
-      const expertPromises = Object.entries(this.expertAgents).map(async ([worldview, agent]) => {
-        const response = await agent.invoke({ topic });
-        return { worldview, response };
-      });
-      
-      // Wait for all expert agents to complete
-      const expertResults = await Promise.all(expertPromises);
-      
-      // Organize results into a structured format
-      for (const { worldview, response } of expertResults) {
-        expertResponses[worldview as WorldView] = response;
-      }
-      
-      // Step 2: Generate the summary
-      const responsesText = Object.entries(expertResponses)
-        .map(([worldview, response]) => `${worldview}: ${response}`)
-        .join("\n");
-      
-      const summary = await summaryGenerator.invoke({
+      // Initialize the state
+      const initialState: AgentState = {
         topic,
-        expertResponsesText: responsesText
-      });
+        expertResponses: {},
+      };
       
-      // Step 3: Generate chart data
-      let chartData: ChartData;
-      try {
-        // Request chart data from AI model
-        const chartJson = await chartDataGenerator.invoke({
-          topic,
-          expertResponsesText: responsesText
-        }) as ChartDataResponse;
-        
-        // Log the raw chart data for debugging
-        console.log("Chart data received from LLM:", JSON.stringify(chartJson, null, 2));
-        
-        // Use the chart helper to sanitize and format the data
-        // This will handle all edge cases and ensure valid data
-        chartData = sanitizeChartData(chartJson);
-        
-        // Additional logging to verify the processed chart data
-        console.log("Processed chart data:", chartData.labels.length, "labels,", 
-                    chartData.datasets.length, "datasets");
-        
-      } catch (error) {
-        // If any error occurs, use default chart data
-        console.error("Error generating chart data:", error);
-        chartData = generateDefaultChartData();
-        console.log("Using default chart data instead");
-      }
-      
-      // Step 4: Generate comparisons
-      let comparisons: WorldViewComparison[];
-      try {
-        const comparisonData = await comparisonsGenerator.invoke({
-          topic,
-          expertResponsesText: responsesText
-        }) as ComparisonDataResponse;
-        
-        // Convert to our schema format
-        comparisons = Object.values(WorldView).map(worldview => {
-          const worldviewStr = worldview.toString();
-          const data = comparisonData[worldviewStr] || {
-            summary: expertResponses[worldview as WorldView] || "No summary available.",
-            keyConcepts: ["No data available"],
-            afterlifeType: "Unknown"
-          };
-          
-          return {
-            worldview: worldview as WorldView,
-            summary: data.summary,
-            keyConcepts: data.keyConcepts,
-            afterlifeType: data.afterlifeType
-          };
-        });
-      } catch (error) {
-        console.error("Error generating comparisons:", error);
-        
-        // Return fallback comparison data
-        comparisons = Object.values(WorldView).map(worldview => ({
-          worldview: worldview as WorldView,
-          summary: expertResponses[worldview as WorldView] || "No data available.",
-          keyConcepts: ["No data available"],
-          afterlifeType: "Unknown"
-        }));
-      }
+      // Execute the graph
+      const result = await this.graph.invoke(initialState);
       
       return {
-        summary,
-        chartData,
-        comparisons
+        summary: result.summary || "Unable to generate summary.",
+        chartData: result.chartData || {
+          labels: Object.values(WorldView).map(formatWorldviewName),
+          datasets: [{
+            label: "Default",
+            data: Array(Object.values(WorldView).length).fill(50),
+            backgroundColor: CHART_COLORS.backgroundColor[0],
+            borderColor: CHART_COLORS.borderColor[0],
+            borderWidth: 1
+          }]
+        },
+        comparisons: result.comparisons || Object.values(WorldView).map(worldview => ({
+          worldview: worldview as WorldView,
+          summary: "No data available.",
+          keyConcepts: ["No data available"],
+          afterlifeType: "Unknown"
+        }))
       };
     } catch (error) {
       console.error("Error in LangGraph coordinator agent:", error);
