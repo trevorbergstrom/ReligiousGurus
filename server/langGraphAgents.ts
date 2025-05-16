@@ -1,4 +1,4 @@
-import { ChartData, WorldView, WorldViewComparison } from "@shared/schema";
+import { ChartData, WorldView, WorldViewComparison, AIModel, ModelProvider } from "@shared/schema";
 import { ChatOpenAI } from "@langchain/openai";
 // import { 
 //  StateGraph, 
@@ -14,9 +14,10 @@ import { JsonOutputParser } from "@langchain/core/output_parsers";
 import { StructuredTool } from "@langchain/core/tools";
 import { Tool } from "@langchain/core/tools";
 import { sanitizeChartData, generateDefaultChartData } from "./chartHelper";
+import { generateTextWithHuggingFace, HuggingFaceModels } from "./huggingface";
 
-// The newest OpenAI model is "gpt-4o" which was released May 13, 2024
-const OPENAI_MODEL = "gpt-4o";
+// Default OpenAI model
+const DEFAULT_OPENAI_MODEL = AIModel.GPT_4_O;
 
 // Color scheme for charts
 const CHART_COLORS = {
@@ -34,13 +35,15 @@ const CHART_COLORS = {
 
 // Initialize the OpenAI model
 const model = new ChatOpenAI({
-  modelName: OPENAI_MODEL,
+  modelName: DEFAULT_OPENAI_MODEL,
   temperature: 0,
 });
 
 // Define the state interface with more robust typing
 interface AgentState {
   topic: string;
+  model: string;
+  provider: string;
   expertResponses: Partial<Record<WorldView, string>>;
   summary?: string;
   chartData?: ChartData;
@@ -431,7 +434,11 @@ export class LangGraphCoordinator {
     return `SYSTEM: ${systemPrompt}\n\nUSER: ${userPrompt}`;
   }
   
-  async processTopic(topic: string): Promise<{
+  async processTopic(
+    topic: string, 
+    modelId: string = AIModel.GPT_4_O, 
+    provider: string = ModelProvider.OPENAI
+  ): Promise<{
     summary: string;
     chartData: ChartData;
     comparisons: WorldViewComparison[];
@@ -441,10 +448,14 @@ export class LangGraphCoordinator {
       // Reset and initialize the process details
       this.resetProcessDetails();
       this.processDetails.topic = topic;
+      this.processDetails.model = modelId;
+      this.processDetails.provider = provider;
       
       // Initialize the state
       let state: AgentState = {
         topic,
+        model: modelId,
+        provider: provider,
         expertResponses: {},
       };
       

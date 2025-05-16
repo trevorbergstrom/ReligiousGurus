@@ -3,15 +3,32 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { randomUUID } from "crypto";
 
+// Available models
+export enum AIModel {
+  GPT_4_O = "gpt-4o",
+  LLAMA_2_70B = "meta-llama/Llama-2-70b-chat-hf",
+  MISTRAL_7B = "mistralai/Mistral-7B-Instruct-v0.2",
+  MIXTRAL_8x7B = "mistralai/Mixtral-8x7B-Instruct-v0.1",
+}
+
+export enum ModelProvider {
+  OPENAI = "openai",
+  HUGGINGFACE = "huggingface",
+}
+
 // Topic schema
 export const topics = pgTable("topics", {
   id: serial("id").primaryKey(),
   content: text("content").notNull(),
+  model: text("model").notNull().default(AIModel.GPT_4_O),
+  provider: text("provider").notNull().default(ModelProvider.OPENAI),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const insertTopicSchema = createInsertSchema(topics).pick({
   content: true,
+  model: true,
+  provider: true,
 });
 
 // Response schema for storing the coordinator and expert responses
