@@ -192,8 +192,8 @@ const agentFunctions = {
     await Promise.all(
       worldviews.map(async (worldview) => {
         try {
-          const expertAgent = createExpertAgent(worldview as WorldView)(state);
-          const response = await expertAgent({ topic: state.topic });
+          const expertAgent = createExpertAgent(worldview as WorldView); // remove (state)
+          const response = await expertAgent.invoke({ topic: state.topic }); // use invoke here
           expertResponses[worldview as WorldView] = response;
         } catch (error) {
           console.error(`Error getting ${worldview} expert response:`, error);
