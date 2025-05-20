@@ -245,7 +245,7 @@ const agentFunctions = {
       // Generate chart data
       try {
         const chartDataGenerator = createChartDataGenerator(state);
-        let chartJson: ChartDataResponse = await chartDataGenerator({
+        let chartJson: ChartDataResponse = await chartDataGenerator.invoke({
           topic: state.topic,
           expertResponsesText
         });
@@ -290,7 +290,7 @@ const agentFunctions = {
       
       try {
         const comparisonsGenerator = createComparisonsGenerator(state);
-        let comparisonData: ComparisonDataResponse = await comparisonsGenerator({
+        let comparisonData: ComparisonDataResponse = await comparisonsGenerator.invoke({
           topic: state.topic,
           expertResponsesText
         });
