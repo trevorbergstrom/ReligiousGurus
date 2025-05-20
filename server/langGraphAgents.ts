@@ -51,27 +51,23 @@ interface ComparisonDataResponse {
   };
 }
 
-type ExpertAgentReturn = 
-  | ((input: { topic: string }) => Promise<string>) 
-  | RunnableSequence<any, string>;
+type ExpertAgentReturn = RunnableSequence<any, string>;
 
-const createExpertAgent = (worldview: WorldView) => {
-  return (state: AgentState): ExpertAgentReturn => {
-    // Always use OpenAI for reliability
-    const expertPrompt = ChatPromptTemplate.fromMessages([
-      ["system", `You are an expert in ${worldview}. Provide a comprehensive response about this topic from the perspective of ${worldview}. 
-      Be accurate, educational, and neutral while representing the core beliefs and perspectives of this worldview faithfully.
-      Write 3-4 paragraphs that cover the main points relevant to this topic from the ${worldview} perspective.
-      Avoid using first person language. Cite scholarly sources or religious texts where appropriate.`],
-      ["user", "{topic}"],
-    ]);
-    
-    return RunnableSequence.from([
-      expertPrompt,
-      model,
-      new StringOutputParser(),
-    ]);
-  };
+const createExpertAgent = (worldview: WorldView): RunnableSequence<any, string> => {
+  // Always use OpenAI for reliability
+  const expertPrompt = ChatPromptTemplate.fromMessages([
+    ["system", `You are an expert in ${worldview}. Provide a comprehensive response about this topic from the perspective of ${worldview}. 
+    Be accurate, educational, and neutral while representing the core beliefs and perspectives of this worldview faithfully.
+    Write 3-4 paragraphs that cover the main points relevant to this topic from the ${worldview} perspective.
+    Avoid using first person language. Cite scholarly sources or religious texts where appropriate.`],
+    ["user", "{topic}"],
+  ]);
+
+  return RunnableSequence.from([
+    expertPrompt,
+    model,
+    new StringOutputParser(),
+  ]);
 };
 
 type SummaryGeneratorReturn = 
