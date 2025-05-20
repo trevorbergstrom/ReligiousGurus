@@ -218,7 +218,7 @@ const agentFunctions = {
         .join("\n\n");
       
       const summaryGenerator = createSummaryGenerator(state);
-      const summary = await summaryGenerator({
+      const summary = await summaryGenerator.invoke({
         topic: state.topic,
         expertResponsesText
       });
