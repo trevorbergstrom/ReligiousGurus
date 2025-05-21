@@ -272,7 +272,7 @@ const agentFunctions = {
         .join("\n\n");
       
       const summaryGenerator = createSummaryGenerator(state);
-      const summary = await summaryGenerator.invoke({
+      const summary = await summaryGenerator({
         topic: state.topic,
         expertResponsesText
       });
@@ -299,7 +299,7 @@ const agentFunctions = {
       // Generate chart data
       try {
         const chartDataGenerator = createChartDataGenerator(state);
-        let chartJson: ChartDataResponse = await chartDataGenerator.invoke({
+        let chartJson: ChartDataResponse = await chartDataGenerator({
           topic: state.topic,
           expertResponsesText
         });
@@ -344,7 +344,7 @@ const agentFunctions = {
       
       try {
         const comparisonsGenerator = createComparisonsGenerator(state);
-        let comparisonData: ComparisonDataResponse = await comparisonsGenerator.invoke({
+        let comparisonData: ComparisonDataResponse = await comparisonsGenerator({
           topic: state.topic,
           expertResponsesText
         });
