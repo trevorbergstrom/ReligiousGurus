@@ -98,7 +98,8 @@ export function ReligiousCopilot() {
       const copilotResponse = generateCopilotResponse(message);
       const assistantMessage = { 
         role: "assistant" as const, 
-        content: `I'm having trouble connecting to the server. Here's a basic response: ${copilotResponse}`
+        content: `I'm having trouble connecting to the server. Here's a basic response: ${copilotResponse.content}`,
+        worldview: copilotResponse.worldview
       };
       setConversation([
         ...updatedConversation,
@@ -109,8 +110,31 @@ export function ReligiousCopilot() {
     }
   };
 
+  // Get worldview-specific styles for message bubbles
+  const getWorldviewStyles = (worldview: WorldView): React.CSSProperties => {
+    const colors = {
+      [WorldView.ATHEISM]: { bg: "#F3F4F6", text: "#1F2937", border: "#4B5563" },
+      [WorldView.AGNOSTICISM]: { bg: "#F3F4F6", text: "#1F2937", border: "#6B7280" },
+      [WorldView.CHRISTIANITY]: { bg: "#EFF6FF", text: "#1E3A8A", border: "#3B82F6" },
+      [WorldView.ISLAM]: { bg: "#ECFDF5", text: "#065F46", border: "#10B981" },
+      [WorldView.HINDUISM]: { bg: "#FFFBEB", text: "#92400E", border: "#F59E0B" },
+      [WorldView.BUDDHISM]: { bg: "#FCE7F3", text: "#831843", border: "#EC4899" },
+      [WorldView.JUDAISM]: { bg: "#EEF2FF", text: "#312E81", border: "#6366F1" },
+      [WorldView.SIKHISM]: { bg: "#FFF7ED", text: "#9A3412", border: "#F97316" }
+    };
+    
+    // Get colors for this worldview or use defaults
+    const colorSet = colors[worldview] || { bg: "#F3F4F6", text: "#333333", border: "#666666" };
+    
+    return {
+      backgroundColor: colorSet.bg,
+      color: colorSet.text,
+      borderLeftColor: colorSet.border
+    };
+  };
+
   // Helper to detect which worldview a text is primarily about
-    const detectWorldviewInText = (text: string | undefined): WorldView | undefined => {
+  const detectWorldviewInText = (text: string | undefined): WorldView | undefined => {
     if (!text) return undefined;
     
     const textLower = text.toLowerCase();
@@ -220,8 +244,15 @@ export function ReligiousCopilot() {
               className={`max-w-[80%] rounded-lg p-2 ${
                 msg.role === "user" 
                   ? "bg-blue-100 text-blue-900" 
-                  : "bg-gray-100 text-gray-900"
+                  : msg.worldview 
+                    ? "border-l-4" 
+                    : "bg-gray-100 text-gray-900"
               }`}
+              style={
+                msg.role !== "user" && msg.worldview 
+                  ? getWorldviewStyles(msg.worldview)
+                  : {}
+              }
             >
               {msg.role === "user" ? (
                 <p className="text-sm">{msg.content}</p>
