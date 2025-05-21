@@ -178,7 +178,16 @@ export function ReligiousCopilot() {
                   : "bg-gray-100 text-gray-900"
               }`}
             >
-              <p className="text-sm">{msg.content}</p>
+              <div 
+                className="text-sm prose prose-sm max-w-none"
+                dangerouslySetInnerHTML={{ 
+                  __html: msg.content
+                    .replace(/\n\n/g, '<br/><br/>')
+                    .replace(/\n/g, '<br/>')
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                }}
+              />
             </div>
           </div>
         ))}
