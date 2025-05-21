@@ -35,7 +35,8 @@ export default function ResultsPanel({ data, isLoading }: ResultsPanelProps) {
             scales: {
               r: {
                 beginAtZero: true,
-                max: 100,
+                suggestedMin: 0,
+                suggestedMax: Math.max(...data.response.chartData.datasets.flatMap(dataset => dataset.data)) + 10,
                 ticks: {
                   stepSize: 20
                 }
