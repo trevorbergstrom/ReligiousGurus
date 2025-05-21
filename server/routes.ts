@@ -12,6 +12,7 @@ import { storage } from "./storage";
 // Use the LangGraph coordinator and Chat Agent
 import { langGraphCoordinator } from "./langGraphAgents";
 import { ChatAgentFactory } from "./chatAgent";
+import { copilotService } from "./copilotApi";
 import { 
   insertTopicSchema, 
   insertChatSessionSchema, 
@@ -219,6 +220,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Copilot API route
+  app.post("/api/copilot", async (req, res) => {
+    try {
+      const { messages, context } = req.body;
+      
+      if (!messages || !Array.isArray(messages)) {
+        return res.status(400).json({ message: "Invalid request format. 'messages' array is required." });
+      }
+      
+      const response = await copilotService.processRequest({
+        messages,
+        context
+      });
+      
+      res.json({ content: response });
+    } catch (error) {
+      console.error("Error in Copilot API:", error);
+      res.status(500).json({ message: "Failed to process copilot request" });
+    }
+  });
+
   // Chat related routes
   
   // Get all chat sessions

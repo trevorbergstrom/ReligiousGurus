@@ -12,6 +12,9 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.37.0",
+    "@copilotkit/react-core": "^1.8.12",
+    "@copilotkit/react-textarea": "^1.8.12",
+    "@copilotkit/react-ui": "^1.8.12",
     "@hookform/resolvers": "^3.10.0",
     "@huggingface/inference": "^3.13.1",
     "@jridgewell/trace-mapping": "^0.3.25",
