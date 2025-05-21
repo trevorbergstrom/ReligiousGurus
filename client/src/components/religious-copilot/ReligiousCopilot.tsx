@@ -110,28 +110,7 @@ export function ReligiousCopilot() {
     }
   };
 
-  // Get worldview-specific styles for message bubbles
-  const getWorldviewStyles = (worldview: WorldView): React.CSSProperties => {
-    const colors = {
-      [WorldView.ATHEISM]: { bg: "#F3F4F6", text: "#1F2937", border: "#4B5563" },
-      [WorldView.AGNOSTICISM]: { bg: "#F3F4F6", text: "#1F2937", border: "#6B7280" },
-      [WorldView.CHRISTIANITY]: { bg: "#EFF6FF", text: "#1E3A8A", border: "#3B82F6" },
-      [WorldView.ISLAM]: { bg: "#ECFDF5", text: "#065F46", border: "#10B981" },
-      [WorldView.HINDUISM]: { bg: "#FFFBEB", text: "#92400E", border: "#F59E0B" },
-      [WorldView.BUDDHISM]: { bg: "#FCE7F3", text: "#831843", border: "#EC4899" },
-      [WorldView.JUDAISM]: { bg: "#EEF2FF", text: "#312E81", border: "#6366F1" },
-      [WorldView.SIKHISM]: { bg: "#FFF7ED", text: "#9A3412", border: "#F97316" }
-    };
-    
-    // Get colors for this worldview or use defaults
-    const colorSet = colors[worldview] || { bg: "#F3F4F6", text: "#333333", border: "#666666" };
-    
-    return {
-      backgroundColor: colorSet.bg,
-      color: colorSet.text,
-      borderLeftColor: colorSet.border
-    };
-  };
+
 
   // Helper to detect which worldview a text is primarily about
   const detectWorldviewInText = (text: string | undefined): WorldView | undefined => {
@@ -250,7 +229,30 @@ export function ReligiousCopilot() {
               }`}
               style={
                 msg.role !== "user" && msg.worldview 
-                  ? getWorldviewStyles(msg.worldview)
+                  ? {
+                    backgroundColor: msg.worldview === WorldView.CHRISTIANITY ? "#EFF6FF" : 
+                                    msg.worldview === WorldView.ISLAM ? "#ECFDF5" :
+                                    msg.worldview === WorldView.HINDUISM ? "#FFFBEB" :
+                                    msg.worldview === WorldView.BUDDHISM ? "#FCE7F3" :
+                                    msg.worldview === WorldView.JUDAISM ? "#EEF2FF" :
+                                    msg.worldview === WorldView.SIKHISM ? "#FFF7ED" :
+                                    msg.worldview === WorldView.ATHEISM ? "#F3F4F6" :
+                                    msg.worldview === WorldView.AGNOSTICISM ? "#F3F4F6" : "#F3F4F6",
+                    color: msg.worldview === WorldView.CHRISTIANITY ? "#1E3A8A" :
+                          msg.worldview === WorldView.ISLAM ? "#065F46" :
+                          msg.worldview === WorldView.HINDUISM ? "#92400E" :
+                          msg.worldview === WorldView.BUDDHISM ? "#831843" :
+                          msg.worldview === WorldView.JUDAISM ? "#312E81" :
+                          msg.worldview === WorldView.SIKHISM ? "#9A3412" :
+                          msg.worldview === WorldView.ATHEISM ? "#1F2937" : "#1F2937",
+                    borderLeftColor: msg.worldview === WorldView.CHRISTIANITY ? "#3B82F6" :
+                                    msg.worldview === WorldView.ISLAM ? "#10B981" :
+                                    msg.worldview === WorldView.HINDUISM ? "#F59E0B" :
+                                    msg.worldview === WorldView.BUDDHISM ? "#EC4899" :
+                                    msg.worldview === WorldView.JUDAISM ? "#6366F1" :
+                                    msg.worldview === WorldView.SIKHISM ? "#F97316" :
+                                    msg.worldview === WorldView.ATHEISM ? "#4B5563" : "#6B7280"
+                  }
                   : {}
               }
             >
