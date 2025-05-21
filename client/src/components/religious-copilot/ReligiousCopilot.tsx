@@ -5,11 +5,12 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { WorldView } from "@shared/schema";
+import { getWorldviewMessageStyle, getWorldviewDisplayName } from "@/lib/worldview-styles";
 
 /**
  * A simple implementation of a copilot assistant for the Religious Gurus application
@@ -20,7 +21,8 @@ export function ReligiousCopilot() {
   const [message, setMessage] = useState("");
   const [conversation, setConversation] = useState<{ 
     role: "user" | "assistant", 
-    content: string 
+    content: string,
+    worldview?: WorldView
   }[]>([
     { 
       role: "assistant", 
@@ -76,9 +78,14 @@ export function ReligiousCopilot() {
       }
       
       const data = await response.json();
+      
+      // Detect if response mentions a specific worldview
+      const detectedWorldview = detectWorldviewInText(data.content);
+      
       const assistantMessage = { 
         role: "assistant" as const, 
-        content: data.content || "Sorry, I couldn't process your request."
+        content: data.content || "Sorry, I couldn't process your request.",
+        worldview: detectedWorldview
       };
       
       setConversation([
@@ -102,33 +109,71 @@ export function ReligiousCopilot() {
     }
   };
 
-  // Simple response generator that will be replaced with the real CopilotKit API
-  const generateCopilotResponse = (userMessage: string): string => {
-    const userMessageLower = userMessage.toLowerCase();
+  // Helper to detect which worldview a text is primarily about
+    const detectWorldviewInText = (text: string | undefined): WorldView | undefined => {
+    if (!text) return undefined;
     
+    const textLower = text.toLowerCase();
+    const worldviewMatches: [WorldView, number][] = [];
+    
+    // Count occurrences of each worldview name
+    Object.values(WorldView).forEach(worldview => {
+      const displayName = getWorldviewDisplayName(worldview as WorldView).toLowerCase();
+      const count = (textLower.match(new RegExp(`\\b${displayName}\\b`, 'gi')) || []).length;
+      
+      if (count > 0) {
+        worldviewMatches.push([worldview as WorldView, count]);
+      }
+    });
+    
+    // If we have matches, return the worldview with the most mentions
+    if (worldviewMatches.length > 0) {
+      worldviewMatches.sort((a, b) => b[1] - a[1]); // Sort by count descending
+      return worldviewMatches[0][0];
+    }
+    
+    return undefined;
+  };
+
+  // Simple response generator that will be replaced with the real CopilotKit API
+  const generateCopilotResponse = (userMessage: string): { content: string, worldview?: WorldView } => {
+    const userMessageLower = userMessage.toLowerCase();
+  
     // Check for worldview-related questions
     const worldviews = Object.values(WorldView);
     for (const worldview of worldviews) {
       if (userMessageLower.includes(worldview.toLowerCase())) {
-        return `To explore ${worldview}, I recommend trying the chat feature with that specific worldview selected. You can also compare multiple worldviews by creating a group chat!`;
+        const displayName = getWorldviewDisplayName(worldview as WorldView);
+        return {
+          content: `To explore ${displayName}, I recommend trying the chat feature with that specific worldview selected. You can also compare multiple worldviews by creating a group chat!`,
+          worldview: worldview as WorldView
+        };
       }
     }
     
     // Default responses
     if (userMessageLower.includes("help")) {
-      return "I can help you navigate the Religious Gurus app! You can ask me about different worldviews, how to use the comparison tool, or how to start a group chat with multiple religious perspectives.";
+      return {
+        content: "I can help you navigate the Religious Gurus app! You can ask me about different worldviews, how to use the comparison tool, or how to start a group chat with multiple religious perspectives."
+      };
     }
     
     if (userMessageLower.includes("comparison") || userMessageLower.includes("compare")) {
-      return "To compare worldviews, go to the home page and enter a topic like 'meaning of life' or 'concept of soul'. You'll receive a neutral summary and visualization comparing how different worldviews approach that topic.";
+      return {
+        content: "To compare worldviews, go to the home page and enter a topic like 'meaning of life' or 'concept of soul'. You'll receive a neutral summary and visualization comparing how different worldviews approach that topic."
+      };
     }
     
     if (userMessageLower.includes("group chat")) {
-      return "To start a group chat with multiple religious perspectives, go to the Chat page and click 'New Chat'. Then select the 'Group Chat' tab and choose which worldviews you want to include in your conversation.";
+      return {
+        content: "To start a group chat with multiple religious perspectives, go to the Chat page and click 'New Chat'. Then select the 'Group Chat' tab and choose which worldviews you want to include in your conversation."
+      };
     }
     
-    return "To learn more about different worldviews, you can either use our comparison tool on the home page or chat with individual worldview experts in the Chat section. Is there something specific you'd like to explore?";
-  };
+    return {
+      content: "To learn more about different worldviews, you can either use our comparison tool on the home page or chat with individual worldview experts in the Chat section. Is there something specific you'd like to explore?"
+    };
+};
 
   if (!isOpen) {
     return (
