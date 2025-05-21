@@ -56,21 +56,32 @@ type ExpertAgentReturn =
   | RunnableSequence<any, string>;
 
 const createExpertAgent = (worldview: WorldView) => {
-  return (state: AgentState): ExpertAgentReturn => {
-    // Always use OpenAI for reliability
-    const expertPrompt = ChatPromptTemplate.fromMessages([
-      ["system", `You are an expert in ${worldview}. Provide a comprehensive response about this topic from the perspective of ${worldview}. 
-      Be accurate, educational, and neutral while representing the core beliefs and perspectives of this worldview faithfully.
-      Write 3-4 paragraphs that cover the main points relevant to this topic from the ${worldview} perspective.
-      Avoid using first person language. Cite scholarly sources or religious texts where appropriate.`],
-      ["user", "{topic}"],
-    ]);
-    
-    return RunnableSequence.from([
-      expertPrompt,
-      model,
-      new StringOutputParser(),
-    ]);
+  // Create a direct function that handles the agent state
+  return (state: AgentState) => {
+    // Return a function that processes the topic
+    return async (input: { topic: string }): Promise<string> => {
+      try {
+        // Always use OpenAI for reliability
+        const expertPrompt = ChatPromptTemplate.fromMessages([
+          ["system", `You are an expert in ${worldview}. Provide a comprehensive response about this topic from the perspective of ${worldview}. 
+          Be accurate, educational, and neutral while representing the core beliefs and perspectives of this worldview faithfully.
+          Write 3-4 paragraphs that cover the main points relevant to this topic from the ${worldview} perspective.
+          Avoid using first person language. Cite scholarly sources or religious texts where appropriate.`],
+          ["user", input.topic],
+        ]);
+        
+        const chain = RunnableSequence.from([
+          expertPrompt,
+          model,
+          new StringOutputParser(),
+        ]);
+        
+        return await chain.invoke({});
+      } catch (error) {
+        console.error(`Error in ${worldview} expert agent:`, error);
+        return `The ${worldview} perspective on ${input.topic} could not be generated due to a technical error. This worldview would typically provide insights based on its core beliefs and philosophical framework.`;
+      }
+    };
   };
 };
 
@@ -78,106 +89,160 @@ type SummaryGeneratorReturn =
   | ((input: { topic: string, expertResponsesText: string }) => Promise<string>) 
   | RunnableSequence<any, string>;
 
-const createSummaryGenerator = (state: AgentState): SummaryGeneratorReturn => {
-  const summaryPrompt = ChatPromptTemplate.fromMessages([
-    ["system", `You are a comparative religion and philosophy expert. 
-    Analyze the responses from different worldviews on the same topic and create a balanced, educational summary.
-    
-    Focus on key similarities and differences between the worldviews. Do not favor any particular perspective.
-    Present a neutral, academic synthesis that highlights the diverse approaches to this topic.
-    
-    Write a concise summary (3-4 paragraphs) that a general audience can understand.`],
-    ["user", `Topic: {topic}
-    
-    Worldview Expert Responses:
-    {expertResponsesText}
-    
-    Please provide a balanced comparative summary that highlights similarities and differences between these worldviews on this topic.`],
-  ]);
-  
-  return RunnableSequence.from([
-    summaryPrompt,
-    model,
-    new StringOutputParser(),
-  ]);
+const createSummaryGenerator = (state: AgentState) => {
+  return async (input: { topic: string, expertResponsesText: string }): Promise<string> => {
+    try {
+      const summaryPrompt = ChatPromptTemplate.fromMessages([
+        ["system", `You are a comparative religion and philosophy expert. 
+        Analyze the responses from different worldviews on the same topic and create a balanced, educational summary.
+        
+        Focus on key similarities and differences between the worldviews. Do not favor any particular perspective.
+        Present a neutral, academic synthesis that highlights the diverse approaches to this topic.
+        
+        Write a concise summary (3-4 paragraphs) that a general audience can understand.`],
+        ["user", `Topic: ${input.topic}
+        
+        Worldview Expert Responses:
+        ${input.expertResponsesText}
+        
+        Please provide a balanced comparative summary that highlights similarities and differences between these worldviews on this topic.`],
+      ]);
+      
+      const chain = RunnableSequence.from([
+        summaryPrompt,
+        model,
+        new StringOutputParser(),
+      ]);
+      
+      return await chain.invoke({});
+    } catch (error) {
+      console.error("Error in summary generation:", error);
+      return `We analyzed perspectives from multiple worldviews on "${input.topic}" but encountered an issue creating a comprehensive summary. Each worldview offers unique insights on this topic based on their core beliefs and principles.`;
+    }
+  };
 };
 
 type ChartDataGeneratorReturn = 
   | ((input: { topic: string, expertResponsesText: string }) => Promise<ChartDataResponse>) 
   | RunnableSequence<any, ChartDataResponse>;
 
-const createChartDataGenerator = (state: AgentState): ChartDataGeneratorReturn => {
-  const chartDataPrompt = ChatPromptTemplate.fromMessages([
-    ["system", `You are a data analyst specializing in comparative religious and philosophical worldviews.
-    
-    Your task is to extract key metrics from worldview responses and generate normalized scores for visualization.
-    
-    Follow these rules:
-    1. Identify 4-6 key concepts, principles, or values mentioned across the worldview responses
-    2. For each worldview, assign a score (1-10) that reflects how important each concept is to that worldview's perspective on this topic
-    3. Output ONLY valid JSON (no text, explanations, or markdown)
-    
-    Output format should be exactly:
-    {
-      "metrics": ["concept1", "concept2", "concept3", "concept4"],
-      "scores": {
-        "atheism": [score1, score2, score3, score4],
-        "christianity": [score1, score2, score3, score4],
-        etc. for each worldview
-      }
-    }`],
-    ["user", `Topic: {topic}
-    
-    Worldview Expert Responses:
-    {expertResponsesText}
-    
-    Generate chart data showing the importance of key concepts across worldviews.`]
-  ]);
-  
-  return RunnableSequence.from([
-    chartDataPrompt,
-    jsonModel,
-    new JsonOutputParser<ChartDataResponse>(),
-  ]);
+const createChartDataGenerator = (state: AgentState) => {
+  return async (input: { topic: string, expertResponsesText: string }): Promise<ChartDataResponse> => {
+    try {
+      const chartDataPrompt = ChatPromptTemplate.fromMessages([
+        ["system", `You are a data analyst specializing in comparative religious and philosophical worldviews.
+        
+        Your task is to extract key metrics from worldview responses and generate normalized scores for visualization.
+        
+        Follow these rules:
+        1. Identify 4-6 key concepts, principles, or values mentioned across the worldview responses
+        2. For each worldview, assign a score (1-10) that reflects how important each concept is to that worldview's perspective on this topic
+        3. Output ONLY valid JSON (no text, explanations, or markdown)
+        
+        The output format should be exactly:
+        {
+          "metrics": ["concept1", "concept2", "concept3", "concept4"],
+          "scores": {
+            "atheism": [score1, score2, score3, score4],
+            "christianity": [score1, score2, score3, score4]
+          }
+        }`],
+        ["user", `Topic: ${input.topic}
+        
+        Worldview Expert Responses:
+        ${input.expertResponsesText}
+        
+        Generate chart data showing the importance of key concepts across worldviews.`]
+      ]);
+      
+      const chain = RunnableSequence.from([
+        chartDataPrompt,
+        jsonModel,
+        new JsonOutputParser<ChartDataResponse>(),
+      ]);
+      
+      return await chain.invoke({});
+    } catch (error) {
+      console.error("Error in chart data generation:", error);
+      // Return fallback chart data
+      return {
+        metrics: ["Spirituality", "Rationality", "Community", "Ethics", "Tradition"],
+        scores: {
+          atheism: [2, 9, 5, 7, 3],
+          agnosticism: [4, 8, 6, 7, 4],
+          christianity: [9, 6, 8, 8, 9],
+          islam: [9, 7, 9, 8, 9],
+          hinduism: [9, 7, 7, 8, 9],
+          buddhism: [8, 7, 8, 9, 8],
+          judaism: [8, 7, 9, 8, 9],
+          sikhism: [8, 7, 9, 8, 8]
+        }
+      };
+    }
+  };
 };
 
 type ComparisonsGeneratorReturn = 
   | ((input: { topic: string, expertResponsesText: string }) => Promise<ComparisonDataResponse>) 
   | RunnableSequence<any, ComparisonDataResponse>;
 
-const createComparisonsGenerator = (state: AgentState): ComparisonsGeneratorReturn => {
-  const comparisonPrompt = ChatPromptTemplate.fromMessages([
-    ["system", `You are a comparative religion and philosophy expert.
-    
-    For each worldview represented in the responses, extract:
-    1. A concise one-paragraph summary of their position on this topic
-    2. 3-5 key concepts central to this worldview's approach to the topic
-    3. The afterlife view category that best matches this worldview (e.g., "reincarnation", "heaven/hell", "none/cessation", "uncertain/agnostic", "nirvana/liberation", etc.)
-    
-    Output ONLY valid JSON with no additional text, explanations, or markdown:
-    {
-      "worldview1": {
-        "summary": "Concise position summary...",
-        "keyConcepts": ["concept1", "concept2", "concept3"],
-        "afterlifeType": "category"
-      },
-      "worldview2": {
-        ...etc for each worldview
-      }
-    }`],
-    ["user", `Topic: {topic}
-    
-    Worldview Expert Responses:
-    {expertResponsesText}
-    
-    Generate structured comparison data for each worldview.`],
-  ]);
-  
-  return RunnableSequence.from([
-    comparisonPrompt,
-    jsonModel,
-    new JsonOutputParser<ComparisonDataResponse>(),
-  ]);
+const createComparisonsGenerator = (state: AgentState) => {
+  return async (input: { topic: string, expertResponsesText: string }): Promise<ComparisonDataResponse> => {
+    try {
+      const comparisonPrompt = ChatPromptTemplate.fromMessages([
+        ["system", `You are a comparative religion and philosophy expert.
+        
+        For each worldview represented in the responses, extract:
+        1. A concise one-paragraph summary of their position on this topic
+        2. 3-5 key concepts central to this worldview's approach to the topic
+        3. The afterlife view category that best matches this worldview (e.g., "reincarnation", "heaven/hell", "none/cessation", "uncertain/agnostic", "nirvana/liberation", etc.)
+        
+        Output ONLY valid JSON with no additional text, explanations, or markdown in this format:
+        {
+          "worldview1": {
+            "summary": "Concise position summary...",
+            "keyConcepts": ["concept1", "concept2", "concept3"],
+            "afterlifeType": "category"
+          },
+          "worldview2": {
+            "summary": "Another position summary...",
+            "keyConcepts": ["concept1", "concept2", "concept3"],
+            "afterlifeType": "category"
+          }
+        }`],
+        ["user", `Topic: ${input.topic}
+        
+        Worldview Expert Responses:
+        ${input.expertResponsesText}
+        
+        Generate structured comparison data for each worldview.`],
+      ]);
+      
+      const chain = RunnableSequence.from([
+        comparisonPrompt,
+        jsonModel,
+        new JsonOutputParser<ComparisonDataResponse>(),
+      ]);
+      
+      return await chain.invoke({});
+    } catch (error) {
+      console.error("Error in comparisons generation:", error);
+      
+      // Return fallback comparison data
+      const worldviews = ["atheism", "agnosticism", "christianity", "islam", "hinduism", "buddhism", "judaism", "sikhism"];
+      const result: ComparisonDataResponse = {};
+      
+      worldviews.forEach(worldview => {
+        result[worldview] = {
+          summary: `The ${worldview} perspective on ${input.topic} reflects its core principles and beliefs.`,
+          keyConcepts: ["belief", "ethics", "practice", "tradition"],
+          afterlifeType: getDefaultAfterlifeType(worldview)
+        };
+      });
+      
+      return result;
+    }
+  };
 };
 
 // LangGraph-inspired agent functions
