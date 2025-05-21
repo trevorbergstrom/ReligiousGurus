@@ -286,8 +286,11 @@ const agentFunctions = {
         .map(([worldview, response]) => `--- ${worldview.toUpperCase()} PERSPECTIVE ---\n${response}\n`)
         .join("\n\n");
       
-      const summaryGenerator = createSummaryGenerator(state);
-      const summary = await summaryGenerator({
+      // Get the summary generator function for this state
+      const getSummary = createSummaryGenerator(state);
+      
+      // Generate the summary
+      const summary = await getSummary({
         topic: state.topic,
         expertResponsesText
       });
@@ -313,8 +316,11 @@ const agentFunctions = {
       
       // Generate chart data
       try {
-        const chartDataGenerator = createChartDataGenerator(state);
-        let chartJson: ChartDataResponse = await chartDataGenerator({
+        // Get the generator function for chart data
+        const getChartData = createChartDataGenerator(state);
+        
+        // Generate chart data JSON
+        let chartJson: ChartDataResponse = await getChartData({
           topic: state.topic,
           expertResponsesText
         });
@@ -358,8 +364,11 @@ const agentFunctions = {
         .join("\n\n");
       
       try {
-        const comparisonsGenerator = createComparisonsGenerator(state);
-        let comparisonData: ComparisonDataResponse = await comparisonsGenerator({
+        // Get the comparisons generator function
+        const getComparisons = createComparisonsGenerator(state);
+        
+        // Generate comparison data
+        let comparisonData: ComparisonDataResponse = await getComparisons({
           topic: state.topic,
           expertResponsesText
         });
