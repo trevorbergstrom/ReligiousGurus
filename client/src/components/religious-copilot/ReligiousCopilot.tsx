@@ -43,17 +43,63 @@ export function ReligiousCopilot() {
     setMessage("");
     setIsLoading(true);
     
-    // In a future implementation, this will call the CopilotKit API
-    // For now, we'll just simulate a response
-    setTimeout(() => {
-      const copilotResponse = generateCopilotResponse(message);
-      const assistantMessage = { role: "assistant" as const, content: copilotResponse };
+    try {
+      // Format conversation for the API - only send the last few messages for context
+      const messagesForApi = updatedConversation.slice(-5).map(msg => ({
+        role: msg.role,
+        content: msg.content
+      }));
+      
+      // Call the Copilot API
+      const response = await fetch('/api/copilot', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages: messagesForApi,
+          context: [
+            { 
+              name: "worldviews", 
+              text: "The available worldviews include: Atheism, Agnosticism, Christianity, Islam, Hinduism, Buddhism, Judaism, Sikhism" 
+            },
+            {
+              name: "app_description",
+              text: "Religious Gurus is an educational AI application that provides neutral, comparative insights on religious and non-religious worldviews across user-submitted topics."
+            }
+          ]
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      const assistantMessage = { 
+        role: "assistant" as const, 
+        content: data.content || "Sorry, I couldn't process your request."
+      };
+      
       setConversation([
         ...updatedConversation,
         assistantMessage
       ]);
+    } catch (error) {
+      console.error('Error calling Copilot API:', error);
+      // Fallback to local response in case of API error
+      const copilotResponse = generateCopilotResponse(message);
+      const assistantMessage = { 
+        role: "assistant" as const, 
+        content: `I'm having trouble connecting to the server. Here's a basic response: ${copilotResponse}`
+      };
+      setConversation([
+        ...updatedConversation,
+        assistantMessage
+      ]);
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   // Simple response generator that will be replaced with the real CopilotKit API
