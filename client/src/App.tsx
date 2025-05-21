@@ -16,6 +16,7 @@ import Home from "@/pages/home";
 import About from "@/pages/about";
 import Chat from "@/pages/chat";
 import NotFound from "@/pages/not-found";
+import { ReligiousCopilot } from "@/components/religious-copilot/ReligiousCopilot";
 
 function Router() {
   return (
@@ -37,6 +38,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
         {children}
       </main>
       <Footer />
+      <ReligiousCopilot />
     </div>
   );
 }
