@@ -125,13 +125,13 @@ const createChartDataGenerator = (state: AgentState) => {
         3. Output ONLY valid JSON (no text, explanations, or markdown)
         
         The output format should be exactly:
-        {
+        {{
           "metrics": ["concept1", "concept2", "concept3", "concept4"],
-          "scores": {
+          "scores": {{
             "atheism": [score1, score2, score3, score4],
             "christianity": [score1, score2, score3, score4]
-          }
-        }`],
+          }}
+        }}`],
         ["user", `Topic: ${input.topic}
         
         Worldview Expert Responses:
@@ -183,18 +183,18 @@ const createComparisonsGenerator = (state: AgentState) => {
         3. The afterlife view category that best matches this worldview (e.g., "reincarnation", "heaven/hell", "none/cessation", "uncertain/agnostic", "nirvana/liberation", etc.)
         
         Output ONLY valid JSON with no additional text, explanations, or markdown in this format:
-        {
-          "worldview1": {
+        {{
+          "worldview1": {{
             "summary": "Concise position summary...",
             "keyConcepts": ["concept1", "concept2", "concept3"],
             "afterlifeType": "category"
-          },
-          "worldview2": {
+          }},
+          "worldview2": {{
             "summary": "Another position summary...",
             "keyConcepts": ["concept1", "concept2", "concept3"],
             "afterlifeType": "category"
-          }
-        }`],
+          }}
+        }}`],
         ["user", `Topic: ${input.topic}
         
         Worldview Expert Responses:
